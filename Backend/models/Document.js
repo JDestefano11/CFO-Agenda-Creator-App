@@ -10,9 +10,9 @@ const documentSchema = new mongoose.Schema({
     type: String,
     required: [true, 'File type is required']
   },
-  filePath: {
-    type: String,
-    required: [true, 'File path is required']
+  fileContent: {
+    type: Buffer,
+    required: [true, 'File content is required']
   },
   fileSize: {
     type: Number,
@@ -26,6 +26,18 @@ const documentSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  analyzed: {
+    type: Boolean,
+    default: false
+  },
+  analysis: {
+    summary: String,
+    keyTopics: [String],
+    financialFigures: String,
+    actionItems: String,
+    rawAnalysis: String,
+    analyzedAt: Date
   }
 });
 
