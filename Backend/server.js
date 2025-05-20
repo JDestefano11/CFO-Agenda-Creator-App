@@ -1,7 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import userRoutes from './routes/userRoutes.js';
+import documentRoutes from './routes/documentRoutes.js';
 import connectDB from './config/db.js';
 
 // Load environment variables
@@ -15,12 +19,27 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Get current directory for static file serving
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Create uploads directory if it doesn't exist
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+app.use('/uploads', express.static(uploadDir));
+
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api/documents', documentRoutes);
 
 // Root route
 app.get('/', (req, res) => {
-  res.send('Practice CFO API is running');
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Connect to database before starting server

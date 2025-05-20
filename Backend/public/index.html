@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Upload Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        input, button {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        input[type="text"], input[type="password"], input[type="email"] {
+            width: 100%;
+            border: 1px solid #ddd;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .error {
+            color: #e74c3c;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .success {
+            color: #2ecc71;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .file-item {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .file-info {
+            flex-grow: 1;
+        }
+        .remove-btn {
+            background-color: #e74c3c;
+            margin-left: 10px;
+        }
+        .remove-btn:hover {
+            background-color: #c0392b;
+        }
+        .hidden {
+            display: none;
+        }
+        .tab-container {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: #3498db;
+            color: white;
+        }
+        #file-input-container {
+            border: 2px dashed #3498db;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        #file-input-container:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <h1>Document Upload Test</h1>
+    
+    <div class="tab-container">
+        <div class="tab active" onclick="showTab('login')">Login</div>
+        <div class="tab" onclick="showTab('signup')">Sign Up</div>
+    </div>
+    
+    <div id="auth-container" class="container">
+        <div id="login-section">
+            <h2>Login</h2>
+            <div>
+                <input type="email" id="login-email" placeholder="Email" required>
+            </div>
+            <div>
+                <input type="password" id="login-password" placeholder="Password" required>
+            </div>
+            <button id="login-btn">Login</button>
+            <div class="error" id="login-error"></div>
+        </div>
+
+        <div id="signup-section" class="hidden">
+            <h2>Sign Up</h2>
+            <div>
+                <input type="text" id="signup-username" placeholder="Username" required>
+            </div>
+            <div>
+                <input type="email" id="signup-email" placeholder="Email" required>
+            </div>
+            <div>
+                <input type="password" id="signup-password" placeholder="Password (min 6 characters)" required>
+            </div>
+            <button id="signup-btn">Sign Up</button>
+            <div class="error" id="signup-error"></div>
+        </div>
+    </div>
+
+    <div id="upload-container" class="container hidden">
+        <h2>Document Upload</h2>
+        <div>
+            <p>Welcome <span id="username"></span>! <button id="logout-btn">Logout</button></p>
+            
+            <div id="file-input-container">
+                <h3>Upload Document</h3>
+                <p>Drag & drop your file here or click to select</p>
+                <form id="upload-form">
+                    <input type="file" id="document" name="document" accept=".pdf,.doc,.docx,.xls,.xlsx" required>
+                    <button type="submit">Upload Document</button>
+                </form>
+            </div>
+            
+            <div class="error" id="upload-error"></div>
+            <div class="success" id="upload-success"></div>
+        </div>
+        
+        <div id="uploaded-files">
+            <h3>Uploaded Files</h3>
+            <div id="files-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let token = localStorage.getItem('token');
+        let currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+        const API_URL = 'http://localhost:5000/api';
+
+        // DOM Elements
+        const authContainer = document.getElementById('auth-container');
+        const uploadContainer = document.getElementById('upload-container');
+        const loginSection = document.getElementById('login-section');
+        const signupSection = document.getElementById('signup-section');
+        const loginEmail = document.getElementById('login-email');
+        const loginPassword = document.getElementById('login-password');
+        const loginBtn = document.getElementById('login-btn');
+        const loginError = document.getElementById('login-error');
+        const signupUsername = document.getElementById('signup-username');
+        const signupEmail = document.getElementById('signup-email');
+        const signupPassword = document.getElementById('signup-password');
+        const signupBtn = document.getElementById('signup-btn');
+        const signupError = document.getElementById('signup-error');
+        const usernameSpan = document.getElementById('username');
+        const logoutBtn = document.getElementById('logout-btn');
+        const uploadForm = document.getElementById('upload-form');
+        const uploadError = document.getElementById('upload-error');
+        const uploadSuccess = document.getElementById('upload-success');
+        const filesList = document.getElementById('files-list');
+
+        // Tab switching
+        function showTab(tabName) {
+            if (tabName === 'login') {
+                document.querySelector('.tab:nth-child(1)').classList.add('active');
+                document.querySelector('.tab:nth-child(2)').classList.remove('active');
+                loginSection.classList.remove('hidden');
+                signupSection.classList.add('hidden');
+            } else {
+                document.querySelector('.tab:nth-child(1)').classList.remove('active');
+                document.querySelector('.tab:nth-child(2)').classList.add('active');
+                loginSection.classList.add('hidden');
+                signupSection.classList.remove('hidden');
+            }
+        }
+
+        // Check if user is logged in
+        function checkAuth() {
+            if (token && currentUser) {
+                authContainer.classList.add('hidden');
+                uploadContainer.classList.remove('hidden');
+                usernameSpan.textContent = currentUser.username;
+            } else {
+                authContainer.classList.remove('hidden');
+                uploadContainer.classList.add('hidden');
+            }
+        }
+
+        // Login function
+        loginBtn.addEventListener('click', async () => {
+            const email = loginEmail.value;
+            const password = loginPassword.value;
+            
+            if (!email || !password) {
+                loginError.textContent = 'Please enter both email and password';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/users/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Login failed');
+                }
+                
+                token = data.token;
+                currentUser = data.user;
+                
+                localStorage.setItem('token', token);
+                localStorage.setItem('user', JSON.stringify(currentUser));
+                
+                loginError.textContent = '';
+                checkAuth();
+                
+            } catch (error) {
+                loginError.textContent = error.message;
+            }
+        });
+
+        // Signup function
+        signupBtn.addEventListener('click', async () => {
+            const username = signupUsername.value;
+            const email = signupEmail.value;
+            const password = signupPassword.value;
+            
+            if (!username || !email || !password) {
+                signupError.textContent = 'Please fill in all fields';
+                return;
+            }
+            
+            if (password.length < 6) {
+                signupError.textContent = 'Password must be at least 6 characters';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/users/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Signup failed');
+                }
+                
+                token = data.token;
+                currentUser = data.user;
+                
+                localStorage.setItem('token', token);
+                localStorage.setItem('user', JSON.stringify(currentUser));
+                
+                signupError.textContent = '';
+                checkAuth();
+                
+            } catch (error) {
+                signupError.textContent = error.message;
+            }
+        });
+
+        // Logout function
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            token = null;
+            currentUser = null;
+            checkAuth();
+        });
+
+        // Upload document
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('document');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                uploadError.textContent = 'Please select a file';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('document', file);
+            
+            try {
+                uploadError.textContent = '';
+                uploadSuccess.textContent = 'Uploading...';
+                
+                const response = await fetch(`${API_URL}/documents/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Upload failed');
+                }
+                
+                uploadSuccess.textContent = 'Document uploaded successfully';
+                uploadError.textContent = '';
+                fileInput.value = '';
+                
+                // Refresh the file list
+                loadFiles();
+                
+            } catch (error) {
+                uploadError.textContent = error.message;
+                uploadSuccess.textContent = '';
+            }
+        });
+
+        // Load uploaded files
+        async function loadFiles() {
+            try {
+                const response = await fetch(`${API_URL}/documents`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load files');
+                }
+                
+                const data = await response.json();
+                
+                filesList.innerHTML = '';
+                
+                if (data.documents && data.documents.length > 0) {
+                    data.documents.forEach(doc => {
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-item';
+                        
+                        const fileInfo = document.createElement('div');
+                        fileInfo.className = 'file-info';
+                        fileInfo.innerHTML = `
+                            <strong>${doc.fileName}</strong><br>
+                            <small>Type: ${doc.fileType} | Size: ${formatFileSize(doc.fileSize)}</small>
+                        `;
+                        
+                        const removeBtn = document.createElement('button');
+                        removeBtn.className = 'remove-btn';
+                        removeBtn.textContent = 'Remove';
+                        removeBtn.onclick = () => removeFile(doc.id);
+                        
+                        fileItem.appendChild(fileInfo);
+                        fileItem.appendChild(removeBtn);
+                        filesList.appendChild(fileItem);
+                    });
+                } else {
+                    filesList.innerHTML = '<p>No documents uploaded yet.</p>';
+                }
+                
+            } catch (error) {
+                console.error('Error loading files:', error);
+                filesList.innerHTML = '<p>Error loading files.</p>';
+            }
+        }
+
+        // Remove file
+        async function removeFile(id) {
+            try {
+                const response = await fetch(`${API_URL}/documents/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to delete file');
+                }
+                
+                uploadSuccess.textContent = 'Document removed successfully';
+                uploadError.textContent = '';
+                
+                // Refresh the file list
+                loadFiles();
+                
+            } catch (error) {
+                uploadError.textContent = error.message;
+                uploadSuccess.textContent = '';
+            }
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' bytes';
+            else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
+            else return (bytes / 1048576).toFixed(2) + ' MB';
+        }
+
+        // Drag and drop functionality
+        const dropArea = document.getElementById('file-input-container');
+        const fileInput = document.getElementById('document');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            dropArea.style.backgroundColor = '#e3f2fd';
+            dropArea.style.borderColor = '#2196f3';
+        }
+
+        function unhighlight() {
+            dropArea.style.backgroundColor = '';
+            dropArea.style.borderColor = '#3498db';
+        }
+
+        dropArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+        }
+
+        // Initialize
+        checkAuth();
+        if (token) {
+            loadFiles();
+        }
+    </script>
+</body>
+</html>
