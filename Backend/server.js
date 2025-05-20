@@ -6,6 +6,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import userRoutes from './routes/userRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
+import openaiRoutes from './routes/openaiRoutes.js';
 import connectDB from './config/db.js';
 
 // Load environment variables
@@ -36,6 +37,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/openai', openaiRoutes);
 
 // Root route
 app.get('/', (req, res) => {
