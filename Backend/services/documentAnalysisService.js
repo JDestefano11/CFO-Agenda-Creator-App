@@ -9,25 +9,96 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// Extract text from PDF - dynamically import pdf-parse only when needed
+// Extract text from PDF with robust error handling
 export const extractTextFromPDF = async (pdfBuffer) => {
   try {
     console.log(`Processing PDF buffer of size: ${pdfBuffer.length} bytes`);
     
-    // Dynamically import the pdf-parse module only when we need to parse a PDF
-    // This avoids the test file loading issue at startup
-    const { default: pdfParse } = await import('pdf-parse/lib/pdf-parse.js');
-    
-    // Parse the PDF buffer
-    const data = await pdfParse(pdfBuffer);
-    
-    console.log(`Successfully extracted ${data.text.length} characters of text from PDF`);
-    
-    // Return the extracted text
-    return data.text;
+    // Try multiple PDF parsing approaches
+    try {
+      // First approach: Use pdf-parse with default options
+      const { default: pdfParse } = await import('pdf-parse/lib/pdf-parse.js');
+      const data = await pdfParse(pdfBuffer);
+      console.log(`Successfully extracted ${data.text.length} characters of text from PDF`);
+      return data.text;
+    } catch (mainError) {
+      console.log('Standard PDF parsing failed, trying alternative approach:', mainError.message);
+      
+      // Second approach: Try with more lenient options
+      try {
+        const { default: pdfParse } = await import('pdf-parse/lib/pdf-parse.js');
+        // Use more lenient options to handle corrupted PDFs
+        const data = await pdfParse(pdfBuffer, {
+          max: 0, // No page limit
+          pagerender: null, // Use default page renderer
+          version: 'v1.10.100' // Use older version which can be more forgiving
+        });
+        console.log(`Successfully extracted ${data.text.length} characters of text from PDF with lenient options`);
+        return data.text;
+      } catch (lenientError) {
+        console.log('Lenient PDF parsing also failed:', lenientError.message);
+        
+        // If both approaches fail, extract what we can from the buffer
+        // This is a last resort approach to get at least some text
+        const text = extractTextFromBuffer(pdfBuffer);
+        if (text && text.length > 100) {
+          console.log(`Extracted ${text.length} characters using buffer fallback method`);
+          return text;
+        }
+        
+        // If all methods fail, throw the original error
+        throw mainError;
+      }
+    }
   } catch (error) {
     console.error('Error extracting text from PDF:', error.message);
     throw new Error(`Failed to extract text from PDF: ${error.message}`);
+  }
+};
+
+// Helper function to extract text directly from buffer as a last resort
+function extractTextFromBuffer(buffer) {
+  try {
+    // Convert buffer to string and look for text patterns
+    const bufferString = buffer.toString('utf8');
+    
+    // Extract text between common PDF text markers
+    const textContent = [];
+    
+    // Look for text between BT (Begin Text) and ET (End Text) markers
+    const btEtMatches = bufferString.match(/BT(.*?)ET/gs);
+    if (btEtMatches && btEtMatches.length > 0) {
+      btEtMatches.forEach(match => {
+        // Clean up non-printable characters
+        const cleaned = match.replace(/[^\x20-\x7E\n\r\t]/g, ' ')
+                            .replace(/\s+/g, ' ')
+                            .trim();
+        if (cleaned.length > 5) {
+          textContent.push(cleaned);
+        }
+      });
+    }
+    
+    // Look for plain text content
+    const plainTextMatches = bufferString.match(/\((.*?)\)/g);
+    if (plainTextMatches && plainTextMatches.length > 0) {
+      plainTextMatches.forEach(match => {
+        if (match.length > 5) {
+          const cleaned = match.replace(/[^\x20-\x7E\n\r\t]/g, ' ')
+                               .replace(/\s+/g, ' ')
+                               .replace(/[\(\)]/g, '')
+                               .trim();
+          if (cleaned.length > 5) {
+            textContent.push(cleaned);
+          }
+        }
+      });
+    }
+    
+    return textContent.join('\n');
+  } catch (error) {
+    console.error('Buffer extraction fallback failed:', error.message);
+    return '';
   }
 };
 
@@ -221,7 +292,7 @@ export const analyzeDocumentContent = async (text) => {
   }
 };
 
-// Process document with universal handling for all common document types
+// Process document with real content extraction for all document types
 export const processDocument = async (document) => {
   try {
     console.log(`Processing document: ${document.fileName}, type: ${document.fileType}`);
@@ -237,82 +308,53 @@ export const processDocument = async (document) => {
     
     console.log(`Document has file content of size: ${document.fileContent.length} bytes`);
     
-    let extractedText = '';
-    let textExtractionSuccess = false;
+    // Extract text from the document using the appropriate method for its file type
+    console.log('Extracting text from document...');
+    let extractedText;
     
-    // Try to extract text from the document
     try {
-      console.log('Attempting to extract text from document...');
-      extractedText = await extractTextFromDocument(document.fileContent, document.fileType);
-      
-      // Check if extraction was successful
-      if (!extractedText || extractedText.length < 50 || extractedText.startsWith('Text extraction not supported')) {
-        console.log('Text extraction produced insufficient content, using fallback');
-        throw new Error('Insufficient content extracted');
+      // Use the appropriate extraction method based on file type
+      if (document.fileType === 'application/pdf') {
+        extractedText = await extractTextFromPDF(document.fileContent);
+      } else if (document.fileType === 'application/msword' || document.fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        extractedText = await extractTextFromWord(document.fileContent);
+      } else if (document.fileType === 'application/vnd.ms-excel' || document.fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+        extractedText = await extractTextFromExcel(document.fileContent);
+      } else if (document.fileType === 'text/plain' || document.fileType === 'text/csv') {
+        extractedText = document.fileContent.toString('utf8');
+      } else {
+        return {
+          success: false,
+          message: `Unsupported file type: ${document.fileType}`
+        };
       }
       
       console.log(`Text extracted successfully, length: ${extractedText.length} characters`);
-      textExtractionSuccess = true;
-    } catch (extractError) {
-      console.error('Error extracting text:', extractError.message);
-      console.log('Using intelligent fallback content generation...');
       
-      // Get document name without extension for personalization
-      const documentName = document.fileName.split('.')[0];
-      
-      // Check file type to provide appropriate fallback content
-      if (document.fileType.includes('word') || document.fileName.endsWith('.doc') || document.fileName.endsWith('.docx')) {
-        console.log('Using resume/document fallback for Word document');
-        extractedText = `
-          This is a professional document for ${documentName}. It contains detailed information, analysis, and recommendations.
-          
-          The document outlines business strategies, financial projections, and operational plans for growth and optimization.
-          
-          Key sections include executive summary, market analysis, financial forecasts, risk assessment, and strategic recommendations.
-          
-          Financial data shows revenue projections, cost structures, profit margins, and investment requirements for the next fiscal year.
-          
-          The document concludes with actionable recommendations for improving operational efficiency, expanding market reach, optimizing resource allocation, enhancing customer experience, and driving sustainable growth.
-        `;
-      } else if (document.fileType.includes('excel') || document.fileType.includes('spreadsheet') || document.fileName.endsWith('.xls') || document.fileName.endsWith('.xlsx')) {
-        console.log('Using financial data fallback for Excel document');
-        extractedText = `
-          This spreadsheet for ${documentName} contains detailed financial data and analysis across multiple worksheets.
-          
-          The data includes quarterly revenue figures, expense breakdowns, profit margin calculations, growth projections, and budget allocations.
-          
-          Key financial metrics show $1.8M in quarterly revenue, 22% year-over-year growth, $420K in operating expenses, 31% profit margin, and $3.2M projected annual revenue.
-          
-          The spreadsheet includes data visualizations showing trend analysis, comparative performance, market segmentation, and forecast scenarios.
-          
-          Analysis indicates opportunities for cost optimization in operations, increased investment in high-growth segments, pricing strategy adjustments, and resource reallocation to maximize ROI.
-        `;
-      } else {
-        console.log('Using generic document fallback');
-        extractedText = `
-          This document titled ${documentName} contains comprehensive business information and strategic insights.
-          
-          The content covers market analysis, competitive positioning, growth strategies, financial performance, and operational recommendations.
-          
-          Key data points include market size of $500M, 15% annual growth rate, 28% market share, $2.4M quarterly revenue, and 24% profit margin.
-          
-          The document identifies strategic opportunities in digital transformation, market expansion, product diversification, operational efficiency, and customer experience enhancement.
-          
-          Recommended actions include implementing new technology solutions, exploring adjacent markets, optimizing the supply chain, enhancing data analytics capabilities, revising pricing strategies, and developing strategic partnerships.
-        `;
+      // If we got very little text, the document might be empty or have extraction issues
+      if (extractedText.length < 50) {
+        return {
+          success: false,
+          message: 'The document appears to be empty or contains too little text to analyze'
+        };
       }
+    } catch (extractError) {
+      console.error('Error extracting text:', extractError);
+      return {
+        success: false,
+        message: `Failed to extract text from document: ${extractError.message}`
+      };
     }
     
-    // Send the extracted or fallback text to OpenAI for analysis
+    // Send the extracted text to OpenAI for analysis
     console.log('Sending content to OpenAI for analysis...');
     const analysisResult = await analyzeDocumentContent(extractedText);
     
-    // Add a note if we used fallback content
-    if (!textExtractionSuccess) {
-      const originalResult = analysisResult.analysis;
-      analysisResult.analysis = `[Note: This analysis is based on AI-generated content as the original document could not be fully parsed.]
-
-${originalResult}`;
+    if (!analysisResult.success) {
+      return {
+        success: false,
+        message: analysisResult.message || 'Failed to analyze document content'
+      };
     }
     
     console.log(`Analysis complete, success: ${analysisResult.success}`);
