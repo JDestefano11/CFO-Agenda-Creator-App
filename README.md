@@ -52,7 +52,6 @@ This repository contains the backend service for the CFO Agenda Creator platform
 ### Document History
 - `GET /api/history/user-history` - Get document history for current user
 - `GET /api/history/document/:documentId` - Get history for specific document
-- `GET /api/history/version/:historyId` - Get specific historical version
 
 ## Architecture Design
 
