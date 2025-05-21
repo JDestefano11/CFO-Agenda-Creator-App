@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import multer from 'multer';
 import Document from '../models/Document.js';
 import { processDocument } from '../services/documentAnalysisService.js';
+import { createHistoryEntry } from '../controllers/documentHistoryController.js';
 
 // Get current directory
 const __filename = fileURLToPath(import.meta.url);
@@ -105,21 +106,22 @@ export const deleteDocument = async (req, res) => {
 const analyzeDocumentInBackground = async (document) => {
   try {
     console.log(`Starting analysis for document: ${document.fileName}`);
-    console.log(`Document details - ID: ${document._id}, Type: ${document.fileType}, Path: ${document.filePath}`);
+    console.log(`Document details - ID: ${document._id}, Type: ${document.fileType}`);
     
-    // Process the document
-    console.log('Calling processDocument function...');
+    // Process the document with real content extraction
+    console.log('Calling processDocument function for real content extraction...');
     const analysisResult = await processDocument(document);
     console.log(`Analysis result received - Success: ${analysisResult.success}`);
     
     if (analysisResult.success) {
       // Parse the analysis results
       const analysis = analysisResult.analysis;
-      console.log('Analysis content received, parsing sections...');
+      console.log('Analysis content received, processing structured data...');
       
       // Extract structured data from the analysis text
+      // The format is based on our OpenAI prompt with numbered sections
       const sections = analysis.split(/\d+\.\s+/).filter(Boolean);
-      console.log(`Parsed ${sections.length} sections from analysis`);
+      console.log(`Processed ${sections.length} sections from analysis`);
       
       // Update the document with analysis results
       console.log(`Updating document ${document._id} with analysis results...`);
@@ -134,6 +136,18 @@ const analyzeDocumentInBackground = async (document) => {
           analyzedAt: new Date()
         }
       });
+      
+      // Get the updated document with analysis
+      const updatedDocument = await Document.findById(document._id);
+      
+      // Create history entry
+      try {
+        await createHistoryEntry(updatedDocument);
+        console.log(`Created history entry for document: ${document.fileName}`);
+      } catch (historyError) {
+        console.error(`Failed to create history entry for document ${document.fileName}:`, historyError);
+        // Continue even if history creation fails
+      }
       
       console.log(`Analysis completed for document: ${document.fileName}`);
     } else {
