@@ -8,6 +8,7 @@ import userRoutes from './routes/userRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import documentHistoryRoutes from './routes/documentHistoryRoutes.js';
 import openaiRoutes from './routes/openaiRoutes.js';
+import documentExportRoutes from './routes/documentExportRoutes.js';
 import connectDB from './config/db.js';
 
 // Load environment variables
@@ -40,6 +41,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/history', documentHistoryRoutes);
 app.use('/api/openai', openaiRoutes);
+app.use('/api/export', documentExportRoutes);
 
 // Root route
 app.get('/', (req, res) => {

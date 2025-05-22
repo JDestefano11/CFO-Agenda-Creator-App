@@ -38,6 +38,20 @@ const documentSchema = new mongoose.Schema({
     actionItems: String,
     rawAnalysis: String,
     analyzedAt: Date
+  }, 
+  export: {
+    outputType: {
+      type: String, 
+      enum: ['email', 'agenda', 'survey'],
+    },
+    primaryStakeholder: {
+      type: String, 
+      enum: ['CFO', 'VP of Finance', 'Head of Accounting'],
+    },
+    content: String, 
+    generatedAt: Date,
+    modifiedContent: String, 
+    finalizedAt: Date
   }
 });
 
