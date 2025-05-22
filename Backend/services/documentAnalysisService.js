@@ -235,32 +235,23 @@ export const analyzeDocumentContent = async (text) => {
     const truncatedText = text.length > 8000 ? text.substring(0, 8000) + '...' : text;
     
     const prompt = `
-    Please analyze the following document content and provide:
-    
-    1. A brief summary of the document (2-3 sentences)
-    
-    2. EXACTLY 5 key topics or themes from the document, formatted as follows:
-       - Topic 1: [Topic Name]
-         [2-3 sentences of details about this topic from the document]
-       
-       - Topic 2: [Topic Name]
-         [2-3 sentences of details about this topic from the document]
-       
-       - Topic 3: [Topic Name]
-         [2-3 sentences of details about this topic from the document]
-       
-       - Topic 4: [Topic Name]
-         [2-3 sentences of details about this topic from the document]
-       
-       - Topic 5: [Topic Name]
-         [2-3 sentences of details about this topic from the document]
-    
-    3. Financial figures or important numbers mentioned (list at least 3-5 if present)
-    
-    4. Action items or recommendations (list 4-6 items)
+You are continuing your role as a financial controls expert assisting a consultant in preparing for a strategic meeting with a company's CFO. The consultant has already reviewed a list of general topics relevant to setting up or updating the company's financial control framework.
+In this step, match the general requirements and questions from Step 2 with relevant findings from the uploaded documentation (e.g., annual reports, trial balances, internal records). For each topic, extract any supporting content from the documents that provides an answer or partial answer.
     
     Document content:
     ${truncatedText}
+    
+    Output Format:
+    For each general topic:
+    Display the original requirement or question
+    Show the AI-extracted information from the documentation that addresses it
+    Clearly highlight if no relevant data was found, keeping the topic open for user input
+    Ensure that each answer is drill-down ready, so the user can confirm, edit, or manually complete the information
+    Maintain a clear and editable structure so the consultant can:
+    Verify the accuracy and completeness of each AI-generated response
+    Add missing context based on their own knowledge or other sources
+    Confirm which topics are ready for inclusion in the final CFO agenda or need further clarification
+    Keep your answers precise, clearly sourced from the uploaded content, and action-oriented. Avoid assumptions or filler text — the goal is to efficiently validate which topics have been addressed and which require CFO input in the next meeting.
     `;
     
     const response = await openai.chat.completions.create({
