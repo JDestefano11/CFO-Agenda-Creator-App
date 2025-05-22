@@ -13,7 +13,7 @@ import { createHistoryEntry } from './documentHistoryController.js';
  */
 export const generateExport = async (req, res) => {
   try {
-    const { outputType, primaryStakeholder } = req.body;
+    const { outputType, primaryStakeholder, customOutputType } = req.body;
     
     // Validate required parameters
     if (!outputType || !primaryStakeholder) {
@@ -23,10 +23,17 @@ export const generateExport = async (req, res) => {
     }
     
     // Validate output type
-    const validOutputTypes = ['agenda', 'survey', 'email'];
+    const validOutputTypes = ['agenda', 'survey', 'email', 'other'];
     if (!validOutputTypes.includes(outputType)) {
       return res.status(400).json({ 
         message: `Invalid output type. Must be one of: ${validOutputTypes.join(', ')}` 
+      });
+    }
+    
+    // If output type is 'other', customOutputType is required
+    if (outputType === 'other' && !customOutputType) {
+      return res.status(400).json({
+        message: 'Custom output type is required when output type is set to "other"'
       });
     }
     
@@ -68,6 +75,7 @@ export const generateExport = async (req, res) => {
     // Update document with export information
     document.export = {
       outputType,
+      customOutputType: outputType === 'other' ? customOutputType : undefined,
       primaryStakeholder,
       content: result.content,
       generatedAt: new Date()
@@ -87,6 +95,7 @@ export const generateExport = async (req, res) => {
       message: 'Export content generated successfully',
       export: {
         outputType,
+        customOutputType: outputType === 'other' ? customOutputType : undefined,
         primaryStakeholder,
         content: result.content,
         generatedAt: document.export.generatedAt
@@ -160,6 +169,7 @@ export const updateExport = async (req, res) => {
       message: 'Export content updated successfully',
       export: {
         outputType: document.export.outputType,
+        customOutputType: document.export.outputType === 'other' ? document.export.customOutputType : undefined,
         primaryStakeholder: document.export.primaryStakeholder,
         content: document.export.content,
         modifiedContent: document.export.modifiedContent,
@@ -228,6 +238,7 @@ export const finalizeExport = async (req, res) => {
       message: 'Export finalized successfully',
       export: {
         outputType: document.export.outputType,
+        customOutputType: document.export.outputType === 'other' ? document.export.customOutputType : undefined,
         primaryStakeholder: document.export.primaryStakeholder,
         finalContent,
         finalizedAt: document.export.finalizedAt
@@ -270,6 +281,7 @@ export const getExport = async (req, res) => {
       message: 'Export retrieved successfully',
       export: {
         outputType: document.export.outputType,
+        customOutputType: document.export.outputType === 'other' ? document.export.customOutputType : undefined,
         primaryStakeholder: document.export.primaryStakeholder,
         content: document.export.content,
         modifiedContent: document.export.modifiedContent,

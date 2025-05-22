@@ -115,6 +115,32 @@ Format the email with:
 `;
       break;
       
+    case 'other':
+      // For custom output type, use a more generic prompt based on the customOutputType
+      systemPrompt = 'You are a professional financial content creator who can adapt information into any requested format while maintaining clarity and professionalism.';
+      userPrompt = `
+Create a professional ${document.export?.customOutputType || 'custom document'} for a ${primaryStakeholder} based on this financial document analysis:
+
+Summary: ${summary}
+
+Key Topics:
+${keyTopics.join('\n')}
+
+Financial Figures: ${financialFigures}
+
+Action Items: ${actionItems}
+
+Create a well-structured document that:
+1. Has an appropriate title and introduction
+2. Organizes the financial information clearly
+3. Highlights the key topics in a logical order
+4. Includes all important financial figures
+5. Clearly states any action items or next steps
+6. Uses a professional tone appropriate for financial executives
+7. Follows standard formatting conventions for this type of document
+`;
+      break;
+      
     default:
       return {
         success: false,

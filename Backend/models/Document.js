@@ -42,8 +42,9 @@ const documentSchema = new mongoose.Schema({
   export: {
     outputType: {
       type: String, 
-      enum: ['email', 'agenda', 'survey'],
+      enum: ['email', 'agenda', 'survey', 'other'],
     },
+    customOutputType: String,
     primaryStakeholder: {
       type: String, 
       enum: ['CFO', 'VP of Finance', 'Head of Accounting'],
