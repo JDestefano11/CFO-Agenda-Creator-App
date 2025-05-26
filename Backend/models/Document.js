@@ -23,6 +23,11 @@ const documentSchema = new mongoose.Schema({
     ref: 'User', 
     required: [true, 'User reference is required']
   },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'User reference is required']
+  },
   createdAt: {
     type: Date,
     default: Date.now

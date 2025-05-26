@@ -5,6 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import userRoutes from './routes/userRoutes.js';
+import profileRoutes from './routes/profileRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import documentHistoryRoutes from './routes/documentHistoryRoutes.js';
 import openaiRoutes from './routes/openaiRoutes.js';
@@ -38,6 +39,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api/profile', profileRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/history', documentHistoryRoutes);
 app.use('/api/openai', openaiRoutes);

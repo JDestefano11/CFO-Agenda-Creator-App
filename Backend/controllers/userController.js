@@ -43,6 +43,7 @@ export const signup = async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
+        profileImage: user.profileImage,
         role: user.role
       },
       token
@@ -82,6 +83,7 @@ export const login = async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
+        profileImage: user.profileImage,
         role: user.role
       },
       token
@@ -103,6 +105,7 @@ export const getProfile = async (req, res) => {
         id: req.user._id,
         username: req.user.username,
         email: req.user.email,
+        profileImage: req.user.profileImage,
         role: req.user.role,
         createdAt: req.user.createdAt
       }
@@ -110,6 +113,44 @@ export const getProfile = async (req, res) => {
   } catch (error) {
     res.status(500).json({ 
       message: 'Error fetching profile', 
+      error: error.message 
+    });
+  }
+};
+
+// Update user profile
+export const updateProfile = async (req, res) => {
+  try {
+    const { profileImage } = req.body;
+    
+    // Find user and update profile
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { 
+        ...(profileImage && { profileImage })
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Return updated user data
+    res.status(200).json({
+      message: 'Profile updated successfully',
+      user: {
+        id: updatedUser._id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        profileImage: updatedUser.profileImage,
+        role: updatedUser.role,
+        createdAt: updatedUser.createdAt
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error updating profile', 
       error: error.message 
     });
   }
