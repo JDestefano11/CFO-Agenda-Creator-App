@@ -13,21 +13,59 @@ const generateToken = (userId) => {
 // Register a new user
 export const signup = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { 
+      firstName, 
+      lastName, 
+      email, 
+      confirmEmail, 
+      companyName, 
+      companyType, 
+      jobTitle, 
+      password, 
+      confirmPassword,
+      username 
+    } = req.body;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    // Validate required fields
+    if (!firstName || !lastName || !email || !confirmEmail || !companyName || 
+        !companyType || !jobTitle || !password || !confirmPassword) {
+      return res.status(400).json({ 
+        message: 'All fields are required' 
+      });
+    }
+
+    // Validate email confirmation
+    if (email !== confirmEmail) {
+      return res.status(400).json({ 
+        message: 'Email and confirmation email do not match' 
+      });
+    }
+
+    // Validate password confirmation
+    if (password !== confirmPassword) {
+      return res.status(400).json({ 
+        message: 'Password and confirmation password do not match' 
+      });
+    }
+
+    // Check if user already exists with this email
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ 
-        message: 'User already exists with that email or username' 
+        message: 'User already exists with that email' 
       });
     }
 
     // Create new user
     const user = new User({
-      username,
+      firstName,
+      lastName,
       email,
-      password
+      companyName,
+      companyType,
+      jobTitle,
+      password,
+      username: username || `${firstName.toLowerCase()}.${lastName.toLowerCase()}`
     });
 
     // Save user to database (password will be hashed by pre-save hook)
@@ -41,8 +79,13 @@ export const signup = async (req, res) => {
       message: 'User registered successfully',
       user: {
         id: user._id,
-        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
+        companyName: user.companyName,
+        companyType: user.companyType,
+        jobTitle: user.jobTitle,
+        username: user.username,
         profileImage: user.profileImage,
         role: user.role
       },
@@ -81,8 +124,13 @@ export const login = async (req, res) => {
       message: 'Login successful',
       user: {
         id: user._id,
-        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
+        companyName: user.companyName,
+        companyType: user.companyType,
+        jobTitle: user.jobTitle,
+        username: user.username,
         profileImage: user.profileImage,
         role: user.role
       },
@@ -103,8 +151,13 @@ export const getProfile = async (req, res) => {
     res.status(200).json({
       user: {
         id: req.user._id,
-        username: req.user.username,
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
         email: req.user.email,
+        companyName: req.user.companyName,
+        companyType: req.user.companyType,
+        jobTitle: req.user.jobTitle,
+        username: req.user.username,
         profileImage: req.user.profileImage,
         role: req.user.role,
         createdAt: req.user.createdAt
@@ -121,14 +174,28 @@ export const getProfile = async (req, res) => {
 // Update user profile
 export const updateProfile = async (req, res) => {
   try {
-    const { profileImage } = req.body;
+    const { 
+      firstName, 
+      lastName, 
+      companyName, 
+      companyType, 
+      jobTitle, 
+      profileImage 
+    } = req.body;
+    
+    // Create update object with only provided fields
+    const updateFields = {};
+    if (firstName) updateFields.firstName = firstName;
+    if (lastName) updateFields.lastName = lastName;
+    if (companyName) updateFields.companyName = companyName;
+    if (companyType) updateFields.companyType = companyType;
+    if (jobTitle) updateFields.jobTitle = jobTitle;
+    if (profileImage) updateFields.profileImage = profileImage;
     
     // Find user and update profile
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
-      { 
-        ...(profileImage && { profileImage })
-      },
+      updateFields,
       { new: true, runValidators: true }
     );
 
@@ -141,8 +208,13 @@ export const updateProfile = async (req, res) => {
       message: 'Profile updated successfully',
       user: {
         id: updatedUser._id,
-        username: updatedUser.username,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
         email: updatedUser.email,
+        companyName: updatedUser.companyName,
+        companyType: updatedUser.companyType,
+        jobTitle: updatedUser.jobTitle,
+        username: updatedUser.username,
         profileImage: updatedUser.profileImage,
         role: updatedUser.role,
         createdAt: updatedUser.createdAt
