@@ -16,13 +16,13 @@ const storage = multer.memoryStorage();
 // File filter to accept only PDFs and common document formats
 const fileFilter = (req, file, cb) => {
   const allowedTypes = [
-    'application/pdf', 
-    'application/msword', 
+    'application/pdf',
+    'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/vnd.ms-excel',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   ];
-  
+
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
@@ -31,7 +31,7 @@ const fileFilter = (req, file, cb) => {
 };
 
 // Set up multer upload
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
@@ -68,18 +68,18 @@ export const uploadDocument = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ 
-      message: 'Error uploading document', 
-      error: error.message 
+    res.status(500).json({
+      message: 'Error uploading document',
+      error: error.message
     });
   }
 };
 
-// Delete a document (remove if wrong document was uploaded)
+// Delete a document
 export const deleteDocument = async (req, res) => {
   try {
     const document = await Document.findById(req.params.id);
-    
+
     if (!document) {
       return res.status(404).json({ message: 'Document not found' });
     }
@@ -95,9 +95,9 @@ export const deleteDocument = async (req, res) => {
 
     res.status(200).json({ message: 'Document deleted successfully' });
   } catch (error) {
-    res.status(500).json({ 
-      message: 'Error deleting document', 
-      error: error.message 
+    res.status(500).json({
+      message: 'Error deleting document',
+      error: error.message
     });
   }
 };
@@ -107,22 +107,22 @@ const analyzeDocumentInBackground = async (document) => {
   try {
     console.log(`Starting analysis for document: ${document.fileName}`);
     console.log(`Document details - ID: ${document._id}, Type: ${document.fileType}`);
-    
+
     // Process the document with real content extraction
     console.log('Calling processDocument function for real content extraction...');
     const analysisResult = await processDocument(document);
     console.log(`Analysis result received - Success: ${analysisResult.success}`);
-    
+
     if (analysisResult.success) {
       // Parse the analysis results
       const analysis = analysisResult.analysis;
       console.log('Analysis content received, processing structured data...');
-      
+
       // Extract structured data from the analysis text
       // The format is based on our OpenAI prompt with numbered sections
       const sections = analysis.split(/\d+\.\s+/).filter(Boolean);
       console.log(`Processed ${sections.length} sections from analysis`);
-      
+
       // Update the document with analysis results
       console.log(`Updating document ${document._id} with analysis results...`);
       await Document.findByIdAndUpdate(document._id, {
@@ -136,10 +136,10 @@ const analyzeDocumentInBackground = async (document) => {
           analyzedAt: new Date()
         }
       });
-      
+
       // Get the updated document with analysis
       const updatedDocument = await Document.findById(document._id);
-      
+
       // Create history entry
       try {
         await createHistoryEntry(updatedDocument);
@@ -148,7 +148,7 @@ const analyzeDocumentInBackground = async (document) => {
         console.error(`Failed to create history entry for document ${document.fileName}:`, historyError);
         // Continue even if history creation fails
       }
-      
+
       console.log(`Analysis completed for document: ${document.fileName}`);
     } else {
       console.error(`Analysis failed for document: ${document.fileName}`, analysisResult.message);
@@ -167,7 +167,7 @@ export const uploadMiddleware = upload.single('document');
 export const getUserDocuments = async (req, res) => {
   try {
     const documents = await Document.find({ uploadedBy: req.user._id }).sort({ createdAt: -1 });
-    
+
     const formattedDocuments = documents.map(doc => ({
       id: doc._id,
       fileName: doc.fileName,
@@ -187,9 +187,9 @@ export const getUserDocuments = async (req, res) => {
       documents: formattedDocuments
     });
   } catch (error) {
-    res.status(500).json({ 
-      message: 'Error retrieving documents', 
-      error: error.message 
+    res.status(500).json({
+      message: 'Error retrieving documents',
+      error: error.message
     });
   }
 };
@@ -198,7 +198,7 @@ export const getUserDocuments = async (req, res) => {
 export const getDocumentAnalysis = async (req, res) => {
   try {
     const document = await Document.findById(req.params.id);
-    
+
     if (!document) {
       return res.status(404).json({ message: 'Document not found' });
     }
@@ -209,7 +209,7 @@ export const getDocumentAnalysis = async (req, res) => {
     }
 
     if (!document.analyzed) {
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: 'Document analysis is pending or not available',
         analyzed: false
       });
@@ -227,9 +227,9 @@ export const getDocumentAnalysis = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ 
-      message: 'Error retrieving document analysis', 
-      error: error.message 
+    res.status(500).json({
+      message: 'Error retrieving document analysis',
+      error: error.message
     });
   }
 };
@@ -238,7 +238,7 @@ export const getDocumentAnalysis = async (req, res) => {
 export const analyzeDocument = async (req, res) => {
   try {
     const document = await Document.findById(req.params.id);
-    
+
     if (!document) {
       return res.status(404).json({ message: 'Document not found' });
     }
@@ -249,18 +249,18 @@ export const analyzeDocument = async (req, res) => {
     }
 
     // Send immediate response that analysis has started
-    res.status(202).json({ 
+    res.status(202).json({
       message: 'Document analysis started! We\'ll process your document and extract valuable insights. Check back soon for the results!',
       documentId: document._id
     });
 
     // Analyze document in the background
     analyzeDocumentInBackground(document);
-    
+
   } catch (error) {
-    res.status(500).json({ 
-      message: 'Error starting document analysis', 
-      error: error.message 
+    res.status(500).json({
+      message: 'Error starting document analysis',
+      error: error.message
     });
   }
 };
