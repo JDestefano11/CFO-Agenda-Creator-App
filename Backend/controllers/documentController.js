@@ -50,7 +50,8 @@ export const uploadDocument = async (req, res) => {
       fileType: req.file.mimetype,
       fileContent: req.file.buffer, // Store the file buffer directly in MongoDB
       fileSize: req.file.size,
-      uploadedBy: req.user._id
+      uploadedBy: req.user._id,
+      user: req.user._id // Adding user field to match the schema requirements
     });
 
     await document.save();
