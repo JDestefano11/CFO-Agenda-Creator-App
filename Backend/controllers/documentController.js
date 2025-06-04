@@ -121,11 +121,14 @@ const analyzeDocumentInBackground = async (document) => {
         analysis: {
           summary: result.summary,
           keyTopics: result.keyTopics,
+          topicDetails: result.topicDetails || {},
           financialFigures: result.financialFigures,
           actionItems: result.actionItems,
           analyzedAt: new Date()
         }
       };
+      
+      console.log('Saving topic details to database:', result.topicDetails);
 
       console.log(`Updating document with analysis results: ${document._id}`);
       const updatedDocument = await Document.findByIdAndUpdate(
@@ -271,6 +274,25 @@ export const getDocumentAnalysis = async (req, res) => {
     let keyTopics = document.analysis.keyTopics || [];
     console.log(`OpenAI generated topics for document ${document._id}:`, keyTopics);
     
+    // Get topic details from the database
+    let topicDetails = {};
+    
+    // Check if we have topic details in the database
+    if (document.analysis.topicDetails && Object.keys(document.analysis.topicDetails).length > 0) {
+      console.log('Using topic details from database');
+      topicDetails = document.analysis.topicDetails;
+      console.log('Topic details from database:', topicDetails);
+    } 
+    // Fallback to global store if available
+    else if (global.structuredTopics && global.structuredTopics.length > 0) {
+      console.log('Using structured topics from global store');
+      
+      // Create a mapping of topic titles to descriptions
+      global.structuredTopics.forEach((topic, index) => {
+        topicDetails[index] = topic.description;
+      });
+    }
+    
     res.status(200).json({
       message: 'Document analysis retrieved successfully',
       analyzed: true,
@@ -280,6 +302,7 @@ export const getDocumentAnalysis = async (req, res) => {
       analysis: {
         summary: document.analysis.summary,
         keyTopics: keyTopics,
+        topicDetails: topicDetails, // Add structured topic descriptions
         financialFigures: document.analysis.financialFigures,
         actionItems: document.analysis.actionItems,
         analyzedAt: document.analysis.analyzedAt

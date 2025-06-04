@@ -3,7 +3,7 @@ import { FiLoader } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const Loading = ({ duration = 5, onComplete }) => {
+const Loading = ({ duration = 15, onComplete }) => {
   const [progress, setProgress] = useState(0);
   const [timeLeft, setTimeLeft] = useState(duration);
   const [loadingComplete, setLoadingComplete] = useState(false);
@@ -25,12 +25,16 @@ const Loading = ({ duration = 5, onComplete }) => {
     // Function to call the backend API for document processing
     const processDocument = async () => {
       try {
-        // Replace with your actual API endpoint
-        const response = await axios.post('/api/documents/process', { 
-          documentId,
-        }, {
+        if (!documentId) {
+          console.error('No document ID found in localStorage');
+          return;
+        }
+
+        // Use the correct API endpoint for document analysis
+        const response = await axios.post(`http://localhost:5000/api/documents/${documentId}/analyze`, {}, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
           }
         });
         
@@ -127,17 +131,14 @@ const Loading = ({ duration = 5, onComplete }) => {
       });
       setCurrentStage('Analysis complete!');
       
-      // Wait an additional 2 seconds after animation completes before redirecting
+      // Wait an additional 15 seconds after animation completes before redirecting
       redirectTimeout = setTimeout(() => {
-        // Call onComplete callback if provided
+        setLoadingComplete(true);
         if (onComplete) {
           onComplete();
         }
-        
-        // Navigate to results page with the document ID
         navigate('/results', { state: { documentId } });
-      }, 2000); // Wait 2 more seconds after animation completes
-      
+      }, 15000);
     }, 5000); // 5 seconds for the main animation
 
     return () => {

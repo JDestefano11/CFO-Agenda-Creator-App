@@ -235,31 +235,40 @@ export const analyzeDocumentContent = async (text) => {
     const truncatedText = text.length > 8000 ? text.substring(0, 8000) + '...' : text;
     
     const prompt = `
-You are continuing your role as a financial controls expert assisting a consultant in preparing for a strategic meeting with a company's CFO. The consultant has already reviewed a list of general topics relevant to setting up or updating the company's financial control framework.
-In this step, match the general requirements and questions from Step 2 with relevant findings from the uploaded documentation (e.g., annual reports, trial balances, internal records). For each topic, extract any supporting content from the documents that provides an answer or partial answer.
-    
-    Document content:
-    ${truncatedText}
-    
-    Output Format:
-    For each general topic:
-    Display the original requirement or question
-    Show the AI-extracted information from the documentation that addresses it
-    Clearly highlight if no relevant data was found, keeping the topic open for user input
-    Ensure that each answer is drill-down ready, so the user can confirm, edit, or manually complete the information
-    Maintain a clear and editable structure so the consultant can:
-    Verify the accuracy and completeness of each AI-generated response
-    Add missing context based on their own knowledge or other sources
-    Confirm which topics are ready for inclusion in the final CFO agenda or need further clarification
-    Keep your answers precise, clearly sourced from the uploaded content, and action-oriented. Avoid assumptions or filler text — the goal is to efficiently validate which topics have been addressed and which require CFO input in the next meeting.
-    `;
+You are a financial controls expert analyzing a document for a CFO. Extract the 5 most important topics from the document and provide detailed information about each topic.
+
+Document content:
+${truncatedText}
+
+Output Format:
+You MUST provide EXACTLY 5 topics in the following structured format with no deviations:
+
+TOPIC 1: [Brief title of the first key topic]
+DESCRIPTION: [2-3 sentences with detailed information about this topic from the document]
+
+TOPIC 2: [Brief title of the second key topic]
+DESCRIPTION: [2-3 sentences with detailed information about this topic from the document]
+
+TOPIC 3: [Brief title of the third key topic]
+DESCRIPTION: [2-3 sentences with detailed information about this topic from the document]
+
+TOPIC 4: [Brief title of the fourth key topic]
+DESCRIPTION: [2-3 sentences with detailed information about this topic from the document]
+
+TOPIC 5: [Brief title of the fifth key topic]
+DESCRIPTION: [2-3 sentences with detailed information about this topic from the document]
+
+Ensure each topic title is concise (3-7 words) and each description provides specific, actionable information from the document. Focus on financial insights, strategic considerations, and key data points that would be valuable for a CFO's agenda.
+
+IMPORTANT: You MUST provide exactly 5 topics with detailed descriptions. Do not skip any topics or descriptions.
+`;
     
     const response = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
         {
           role: "system",
-          content: "You are a financial document analysis assistant. Extract key information from financial documents in a clear, structured format. Always provide EXACTLY 5 key topics with details under each topic."
+          content: "You are a financial document analysis assistant. Extract key information from financial documents in a clear, structured format. Always provide EXACTLY 5 key topics with a title and detailed description for each. Format each topic as 'TOPIC X: [Title]' followed by 'DESCRIPTION: [2-3 sentence description]'."
         },
         {
           role: "user",
@@ -355,125 +364,80 @@ export const processDocument = async (document) => {
     let keyTopics = [];
     
     try {
-      console.log('Attempting to extract topics from OpenAI response');
+      console.log('Attempting to extract structured topics from OpenAI response');
       
-      // First attempt: Look for explicit topic patterns
-      const topicPatterns = [
-        /Topic\s*\d+:\s*([^\n]+)/g,  // "Topic 1: Something"
-        /\d+\.\s+([^\n:]+)(?:\n|:|$)/g,  // "1. Something" followed by newline or colon
-        /\*\s+([^\n:]+)(?:\n|:|$)/g,  // "* Something" followed by newline or colon
-        /•\s+([^\n:]+)(?:\n|:|$)/g,  // "• Something" followed by newline or colon
-        /^([A-Z][^\n:]+?):\s/gm,  // "Capital Words: " at start of line
-        /\n([A-Z][^\n:]{10,60})(?:\n|$)/g  // Capitalized phrases on their own line (10-60 chars)
-      ];
+      // Parse the structured format from OpenAI
+      // Looking for patterns like "TOPIC 1: Title" followed by "DESCRIPTION: Details"
+      const topicPattern = /TOPIC\s*(\d+)\s*:\s*([^\n]+)\s*\n+\s*DESCRIPTION\s*:\s*([^\n]+(?:\n+[^\n]+)*?)(?=\n+TOPIC|$)/gi;
       
-      // Try each pattern until we find topics
-      for (const pattern of topicPatterns) {
-        const matches = [];
-        let match;
-        const regex = new RegExp(pattern);
+      // Store both topic titles and descriptions
+      const structuredTopics = [];
+      const topicTitles = [];
+      const topicDescriptions = [];
+      const topicDetailsMap = {};
+      
+      let match;
+      while ((match = topicPattern.exec(analysisText)) !== null) {
+        const topicNumber = parseInt(match[1]) - 1; // Convert to 0-based index
+        const topicTitle = match[2].trim();
+        const topicDescription = match[3].trim();
         
-        // Need to create a copy of the text for regex with 'g' flag
-        const textCopy = analysisText;
+        console.log(`Found Topic ${topicNumber + 1}: ${topicTitle}`);
+        console.log(`Description: ${topicDescription}`);
         
-        // Extract all matches for this pattern
-        while ((match = regex.exec(textCopy)) !== null) {
-          if (match[1] && match[1].trim().length > 3) {
-            matches.push(match[1].trim());
+        structuredTopics.push({
+          title: topicTitle,
+          description: topicDescription
+        });
+        
+        topicTitles.push(topicTitle);
+        topicDescriptions.push(topicDescription);
+        
+        // Store in the map using the index as the key
+        topicDetailsMap[topicNumber] = topicDescription;
+      }
+      
+      // Log the topic details map
+      console.log('Topic details map:', topicDetailsMap);
+      
+      console.log(`Found ${structuredTopics.length} structured topics`);
+      
+      // If we found structured topics, use them
+      if (structuredTopics.length > 0) {
+        keyTopics = topicTitles;
+        
+        // Store the descriptions for later use
+        global.topicDescriptions = topicDescriptions;
+        global.structuredTopics = structuredTopics;
+        global.topicDetailsMap = topicDetailsMap;
+      } else {
+        // Fallback: Try to find topics by looking for numbered sections
+        console.log('No structured topics found, trying alternative parsing');
+        
+        const topicRegex = /\d+\s*[.:]\s*([^\n]+)/g;
+        let fallbackMatch;
+        while ((fallbackMatch = topicRegex.exec(analysisText)) !== null) {
+          if (fallbackMatch[1] && fallbackMatch[1].trim().length > 0) {
+            keyTopics.push(fallbackMatch[1].trim());
           }
         }
         
-        // If we found topics with this pattern, use them
-        if (matches.length >= 3) { // Require at least 3 matches to consider it a valid pattern
-          console.log(`Found ${matches.length} topics using pattern: ${pattern}`);
-          keyTopics = matches;
-          break;
-        }
-      }
-      
-      // If no patterns worked, try the section splitting approach
-      if (keyTopics.length === 0) {
-        console.log('No topics found with patterns, trying section splitting');
-        
-        // Split by common section dividers
-        const sections = analysisText.split(/\n\s*\d+\.\s+/).filter(Boolean);
-        
-        if (sections.length >= 3) {
-          // Extract the first line of each section as a topic
-          keyTopics = sections.map(section => {
-            const firstLine = section.split('\n')[0].trim();
-            return firstLine.length > 50 ? firstLine.substring(0, 50) + '...' : firstLine;
-          });
-          console.log(`Extracted ${keyTopics.length} topics from sections`);
-        }
-      }
-      
-      // If we still don't have topics, try a more aggressive approach
-      if (keyTopics.length === 0) {
-        console.log('Still no topics found, using aggressive line parsing');
-        
-        const lines = analysisText.split('\n');
-        for (const line of lines) {
-          const trimmedLine = line.trim();
-          // Look for lines that might be headings or topics
-          if (trimmedLine.length > 5 && trimmedLine.length < 100 && 
-              (trimmedLine.endsWith(':') || 
-               trimmedLine.match(/^[\d\*\-•\.]\s+/) || 
-               trimmedLine.match(/^[A-Z]/) || 
-               trimmedLine.includes('topic') || 
-               trimmedLine.includes('Topic'))) {
-            
-            const cleanedLine = trimmedLine
-              .replace(/^[\d\*\-•\.]\s+/, '') // Remove bullet points
-              .replace(/^[^:]+:\s*/, '')      // Remove "Something:" prefix
-              .replace(/:\s*$/, '')           // Remove trailing colon
-              .trim();
-              
-            if (cleanedLine && cleanedLine.length > 3 && !keyTopics.includes(cleanedLine)) {
-              keyTopics.push(cleanedLine);
-              if (keyTopics.length >= 5) break; // Limit to 5 topics
-            }
+        // If we still don't have enough topics, use generic ones
+        if (keyTopics.length < 5) {
+          console.log(`Only found ${keyTopics.length} topics, adding generic topics`);
+          
+          // Add generic topics if needed
+          const genericTopics = [
+            'Financial Performance Analysis',
+            'Budget Planning and Forecasting',
+            'Risk Management Strategy',
+            'Cost Optimization Opportunities',
+            'Investment Priorities'
+          ];
+          
+          for (let i = keyTopics.length; i < 5; i++) {
+            keyTopics.push(genericTopics[i - keyTopics.length]);
           }
-        }
-      }
-      
-      // If we still don't have enough topics, create generic ones from the content
-      if (keyTopics.length < 5) {
-        console.log(`Only found ${keyTopics.length} topics, generating additional generic topics`);
-        
-        // Extract important-looking phrases from the text
-        const phrases = analysisText.match(/\b[A-Z][a-z]+ [A-Za-z ]{2,30}\b/g) || [];
-        const financialTerms = phrases.filter(phrase => 
-          phrase.includes('financial') || 
-          phrase.includes('budget') || 
-          phrase.includes('cost') || 
-          phrase.includes('revenue') || 
-          phrase.includes('profit') ||
-          phrase.includes('investment') ||
-          phrase.includes('strategy') ||
-          phrase.includes('control') ||
-          phrase.includes('risk')
-        );
-        
-        // Add unique financial terms as topics
-        for (const term of financialTerms) {
-          if (!keyTopics.includes(term) && term.length > 5) {
-            keyTopics.push(term);
-            if (keyTopics.length >= 5) break;
-          }
-        }
-        
-        // If still not enough, add generic topics
-        const genericTopics = [
-          'Financial Performance Analysis',
-          'Budget Planning and Forecasting',
-          'Risk Management Strategy',
-          'Cost Optimization Opportunities',
-          'Investment Priorities'
-        ];
-        
-        for (let i = keyTopics.length; i < 5; i++) {
-          keyTopics.push(genericTopics[i - keyTopics.length]);
         }
       }
       
@@ -513,11 +477,12 @@ export const processDocument = async (document) => {
       console.error('Error extracting summary:', error);
     }
     
-    // Return structured analysis result
+    // Return structured analysis result with topic details
     return {
       success: true,
       summary: summary,
       keyTopics: keyTopics,
+      topicDetails: topicDetailsMap || {}, // Use the map we created during extraction
       financialFigures: 'Financial figures extracted from document',
       actionItems: 'Action items identified from document content',
       rawAnalysis: analysisText

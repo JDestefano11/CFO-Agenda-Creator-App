@@ -39,6 +39,10 @@ const documentSchema = new mongoose.Schema({
   analysis: {
     summary: String,
     keyTopics: [String],
+    topicDetails: {
+      type: Object,
+      default: {}
+    },
     financialFigures: String,
     actionItems: String,
     rawAnalysis: String,
