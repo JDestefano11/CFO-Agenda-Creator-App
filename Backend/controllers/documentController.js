@@ -109,50 +109,89 @@ const analyzeDocumentInBackground = async (document) => {
     console.log(`Starting analysis for document: ${document.fileName}`);
     console.log(`Document details - ID: ${document._id}, Type: ${document.fileType}`);
 
-    // Process the document with real content extraction
-    console.log('Calling processDocument function for real content extraction...');
-    const analysisResult = await processDocument(document);
-    console.log(`Analysis result received - Success: ${analysisResult.success}`);
+    const analysisService = await import('../services/documentAnalysisService.js');
+    const result = await analysisService.processDocument(document);
 
-    if (analysisResult.success) {
-      // Parse the analysis results
-      const analysis = analysisResult.analysis;
-      console.log('Analysis content received, processing structured data...');
+    if (result.success) {
+      console.log(`Analysis completed successfully for document: ${document.fileName}`);
 
-      // Extract structured data from the analysis text
-      // The format is based on our OpenAI prompt with numbered sections
-      const sections = analysis.split(/\d+\.\s+/).filter(Boolean);
-      console.log(`Processed ${sections.length} sections from analysis`);
-
-      // Update the document with analysis results
-      console.log(`Updating document ${document._id} with analysis results...`);
-      await Document.findByIdAndUpdate(document._id, {
+      // Update document with analysis results
+      const updateData = {
         analyzed: true,
         analysis: {
-          summary: sections[0] || '',
-          keyTopics: sections[1] ? sections[1].split(/\n+/).filter(Boolean).map(topic => topic.trim()) : [],
-          financialFigures: sections[2] || '',
-          actionItems: sections[3] || '',
-          rawAnalysis: analysis,
+          summary: result.summary,
+          keyTopics: result.keyTopics,
+          financialFigures: result.financialFigures,
+          actionItems: result.actionItems,
           analyzedAt: new Date()
         }
-      });
+      };
 
-      // Get the updated document with analysis
-      const updatedDocument = await Document.findById(document._id);
+      console.log(`Updating document with analysis results: ${document._id}`);
+      const updatedDocument = await Document.findByIdAndUpdate(
+        document._id,
+        updateData,
+        { new: true }
+      );
 
-      // Create history entry
-      try {
-        await createHistoryEntry(updatedDocument);
-        console.log(`Created history entry for document: ${document.fileName}`);
-      } catch (historyError) {
-        console.error(`Failed to create history entry for document ${document.fileName}:`, historyError);
-        // Continue even if history creation fails
+      if (!updatedDocument) {
+        console.error(`Failed to update document with analysis results: ${document._id}`);
+        return;
       }
 
-      console.log(`Analysis completed for document: ${document.fileName}`);
+      console.log(`Document updated successfully with analysis results: ${document._id}`);
+
+      // Create history entry using both methods to ensure it works
+      try {
+        // Method 1: Direct function call
+        const { createHistoryEntry } = await import('../controllers/documentHistoryController.js');
+        const historyEntry = await createHistoryEntry(updatedDocument);
+
+        if (historyEntry) {
+          console.log(`Created history entry for document via direct function call: ${document.fileName}, version: ${historyEntry.version}`);
+        } else {
+          console.error(`Failed to create history entry via direct function call for document: ${document.fileName}`);
+
+          // Method 2: API call as fallback
+          try {
+            // Make an internal API call to create history
+            const axios = (await import('axios')).default;
+            
+            // Get the token
+            const token = await generateSystemToken(updatedDocument.uploadedBy);
+            
+            const response = await axios.post(
+              `http://localhost:${process.env.PORT || 5000}/api/history/create-after-analysis/${updatedDocument._id}`,
+              {},
+              {
+                headers: {
+                  // Create a system token for internal API calls
+                  Authorization: `Bearer ${token}`
+                }
+              }
+            );
+
+            console.log(`Created history entry via API call: ${document.fileName}`, response.data);
+          } catch (apiError) {
+            console.error(`Error creating history via API call for document ${document.fileName}:`, apiError.message);
+          }
+        }
+      } catch (historyError) {
+        console.error(`Error creating history entry for document ${document.fileName}:`, historyError);
+        console.error(historyError.stack); // Log the full stack trace
+      }
+
     } else {
-      console.error(`Analysis failed for document: ${document.fileName}`, analysisResult.message);
+      console.error(`Analysis failed for document: ${document.fileName}`, result.error);
+
+      // Update document with failure status
+      await Document.findByIdAndUpdate(
+        document._id,
+        {
+          analyzed: false,
+          analysisError: result.error
+        }
+      );
     }
   } catch (error) {
     console.error(`Error analyzing document ${document.fileName}:`, error);
@@ -160,6 +199,18 @@ const analyzeDocumentInBackground = async (document) => {
   }
 };
 
+// Generate a system token for internal API calls
+const generateSystemToken = (userId) => {
+  // Using dynamic import for JWT to avoid issues with require
+  return import('jsonwebtoken')
+    .then(jwt => {
+      return jwt.sign(
+        { id: userId, isSystemCall: true },
+        process.env.JWT_SECRET || 'your_jwt_secret',
+        { expiresIn: '5m' } // Short expiration for security
+      );
+    });
+};
 
 // Middleware to handle file upload
 export const uploadMiddleware = upload.single('document');
@@ -216,12 +267,19 @@ export const getDocumentAnalysis = async (req, res) => {
       });
     }
 
+    // Use only the topics generated by OpenAI
+    let keyTopics = document.analysis.keyTopics || [];
+    console.log(`OpenAI generated topics for document ${document._id}:`, keyTopics);
+    
     res.status(200).json({
       message: 'Document analysis retrieved successfully',
       analyzed: true,
+      documentName: document.name, // Include document name in response
+      keyTopics: keyTopics, // Added at top level for backward compatibility
+      topics: keyTopics, // Alternative name for frontend compatibility
       analysis: {
         summary: document.analysis.summary,
-        keyTopics: document.analysis.keyTopics,
+        keyTopics: keyTopics,
         financialFigures: document.analysis.financialFigures,
         actionItems: document.analysis.actionItems,
         analyzedAt: document.analysis.analyzedAt

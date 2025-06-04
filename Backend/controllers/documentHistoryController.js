@@ -153,10 +153,172 @@ export const createHistoryEntry = async (document) => {
   }
 };
 
+// Check if history exists for a document
+export const checkDocumentHistoryStatus = async (req, res) => {
+  try {
+    const { documentId } = req.params;
+    
+    // Verify document exists and user has access
+    const document = await Document.findById(documentId);
+    if (!document) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+    
+    // Check if user owns the document
+    if (document.uploadedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    
+    // Check if there's a history entry for this document
+    const historyEntries = await DocumentHistory.find({ documentId }).sort({ version: -1 });
+    
+    if (historyEntries && historyEntries.length > 0) {
+      const latestEntry = historyEntries[0];
+      res.status(200).json({
+        message: 'Document history status retrieved successfully',
+        historyExists: true,
+        historyCreatedAt: latestEntry.timestamp,
+        version: latestEntry.version,
+        totalVersions: historyEntries.length,
+        documentInfo: {
+          fileName: document.fileName,
+          analyzed: document.analyzed,
+          analyzedAt: document.analysis?.analyzedAt
+        }
+      });
+    } else {
+      res.status(200).json({
+        message: 'Document history status retrieved successfully',
+        historyExists: false,
+        documentInfo: {
+          fileName: document.fileName,
+          analyzed: document.analyzed,
+          analyzedAt: document.analysis?.analyzedAt
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error checking document history status:', error);
+    res.status(500).json({ 
+      message: 'Error checking document history status', 
+      error: error.message 
+    });
+  }
+};
+
+// Create history entry when analysis is complete
+export const createHistoryAfterAnalysis = async (req, res) => {
+  try {
+    const { documentId } = req.params;
+    
+    // Verify document exists and user has access
+    const document = await Document.findById(documentId);
+    if (!document) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+    
+    // Check if user owns the document
+    if (document.uploadedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    
+    // Check if document has been analyzed
+    if (!document.analyzed || !document.analysis) {
+      return res.status(400).json({ 
+        message: 'Document has not been analyzed yet',
+        analyzed: false
+      });
+    }
+    
+    // Check if history already exists for this document
+    const existingHistory = await DocumentHistory.findOne({ documentId });
+    
+    if (existingHistory) {
+      return res.status(200).json({
+        message: 'Document history entry already exists',
+        historyExists: true,
+        historyEntry: existingHistory
+      });
+    }
+    
+    console.log(`Creating history after analysis for document: ${documentId}`);
+    
+    // Create history entry
+    const historyEntry = await createHistoryEntry(document);
+    
+    if (!historyEntry) {
+      console.error(`Failed to create history entry after analysis for document: ${documentId}`);
+      return res.status(500).json({ message: 'Failed to create history entry' });
+    }
+    
+    console.log(`Successfully created history entry after analysis for document: ${documentId}, version: ${historyEntry.version}`);
+    
+    res.status(201).json({
+      message: 'Document history entry created after analysis',
+      historyEntry
+    });
+  } catch (error) {
+    console.error(`Error creating document history after analysis: ${error.message}`, error);
+    res.status(500).json({ 
+      message: 'Error creating document history after analysis', 
+      error: error.message 
+    });
+  }
+};
+
+// Manually create a history entry for a document
+export const createManualHistoryEntry = async (req, res) => {
+  try {
+    const { documentId } = req.params;
+    
+    // Verify document exists and user has access
+    const document = await Document.findById(documentId);
+    if (!document) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+    
+    // Check if user owns the document
+    if (document.uploadedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    
+    // Check if document has been analyzed
+    if (!document.analyzed || !document.analysis) {
+      return res.status(400).json({ message: 'Document has not been analyzed yet' });
+    }
+    
+    console.log(`Manual history creation requested for document: ${documentId}`);
+    
+    // Create history entry
+    const historyEntry = await createHistoryEntry(document);
+    
+    if (!historyEntry) {
+      console.error(`Failed to create history entry for document: ${documentId}`);
+      return res.status(500).json({ message: 'Failed to create history entry' });
+    }
+    
+    console.log(`Successfully created history entry for document: ${documentId}, version: ${historyEntry.version}`);
+    
+    res.status(201).json({
+      message: 'Document history entry created successfully',
+      historyEntry
+    });
+  } catch (error) {
+    console.error(`Error creating document history entry: ${error.message}`, error);
+    res.status(500).json({ 
+      message: 'Error creating document history entry', 
+      error: error.message 
+    });
+  }
+};
+
 export default {
   getUserDocumentHistory,
   getDocumentVersionHistory,
   getHistoricalVersion,
-  createHistoryEntry
+  createHistoryEntry,
+  checkDocumentHistoryStatus,
+  createHistoryAfterAnalysis,
+  createManualHistoryEntry
 };
 
