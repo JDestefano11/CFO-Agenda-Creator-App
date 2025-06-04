@@ -1,5 +1,6 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import Upload from "./pages/upload";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -15,6 +16,15 @@ const App = () => {
             <>
               <Navbar />
               <Home />
+            </>
+          }
+        />
+        <Route
+          path="/upload"
+          element={
+            <>
+              <Navbar />
+              <Upload />
             </>
           }
         />
