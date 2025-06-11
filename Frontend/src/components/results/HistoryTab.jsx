@@ -1,12 +1,12 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import { FiCheckCircle, FiXCircle, FiClock } from "react-icons/fi";
+import { useResults } from "../../context/ResultsContext";
 
 /**
  * HistoryTab component displays a list of previously analyzed documents
  */
 const HistoryTab = () => {
-  const navigate = useNavigate();
+  const { navigate } = useResults();
 
   // Mock data for document history
   const documentHistory = [
@@ -41,7 +41,6 @@ const HistoryTab = () => {
   ];
 
   const handleDocumentClick = (documentId) => {
-    // In a real implementation, this would navigate to the results page for the selected document
     localStorage.setItem("currentDocumentId", documentId);
     navigate("/results", { state: { documentId } });
   };

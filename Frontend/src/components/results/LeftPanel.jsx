@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
 const LeftPanel = ({ children }) => {
   return (
@@ -7,10 +6,6 @@ const LeftPanel = ({ children }) => {
       {children}
     </div>
   );
-};
-
-LeftPanel.propTypes = {
-  children: PropTypes.node
 };
 
 export default LeftPanel;

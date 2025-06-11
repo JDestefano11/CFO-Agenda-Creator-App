@@ -1,48 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
-import axios from 'axios';
+import { formatContentAsBullets } from '../../utils/topicUtils';
+import { useResults } from '../../context/ResultsContext';
 import './TopicEditor.css';
 
-const TopicEditor = ({ topic, documentId, onSave, onCancel }) => {
+const TopicEditor = () => {
+  const { editingTopic: topic, handleSaveEdit, handleCancelEdit } = useResults();
   const [title, setTitle] = useState(topic?.title || '');
   const [bulletPoints, setBulletPoints] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Import the same formatting function used in Results.jsx
-  const formatContentAsBullets = (content) => {
-    if (!content) return [];
-    
-    // First try to split by newlines
-    let points = content.split('\n').filter(line => line.trim() !== '');
-    
-    // If we only got one item, try to split by sentences
-    if (points.length <= 1) {
-      points = content.split(/\.\s+/).filter(sentence => sentence.trim().length > 0);
-      
-      // Add periods back to sentences if they were removed during splitting
-      points = points.map(point => {
-        if (!point.endsWith('.') && !point.endsWith('!') && !point.endsWith('?')) {
-          return point + '.';
-        }
-        return point;
-      });
-    }
-    
-    // Remove ANY bullet point markers at the beginning of each point
-    points = points.map(point => {
-      // Remove all bullet characters (•, -, *, etc.) from the beginning of the point
-      return point.replace(/^[\u2022\-\*\s]+/, '').trim();
-    });
-    
-    return points;
-  };
 
   useEffect(() => {
-    // Initialize bullet points from the topic description
-    if (topic && topic.description) {
-      // Use the same formatting function as in the topic cards
-      const points = formatContentAsBullets(topic.description);
+    // Initialize bullet points from the topic content or description (for backward compatibility)
+    const topicContent = topic?.content || topic?.description;
+    
+    if (topicContent) {
+      // Use the formatting function from topicUtils
+      const points = formatContentAsBullets(topicContent);
       console.log('Extracted bullet points:', points);
       
       // Ensure we have at least 2 bullet points for editing
@@ -54,7 +29,7 @@ const TopicEditor = ({ topic, documentId, onSave, onCancel }) => {
         setBulletPoints(points);
       }
     } else {
-      console.log('No description found, using default bullet points');
+      console.log('No content found, using default bullet points');
       setBulletPoints(['', '']);
     }
   }, [topic]);
@@ -77,7 +52,7 @@ const TopicEditor = ({ topic, documentId, onSave, onCancel }) => {
     setBulletPoints(newPoints);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!title.trim()) {
       setError('Title cannot be empty');
       return;
@@ -103,18 +78,16 @@ const TopicEditor = ({ topic, documentId, onSave, onCancel }) => {
       
       // Store the clean points as newline-separated text without adding bullet characters
       // The bullet points will be displayed with CSS list-disc style in the Results page
-      const description = cleanedPoints.join('\n');
+      const content = cleanedPoints.join('\n');
       
       const updatedTopic = {
         ...topic,
         title,
-        description
+        content
       };
 
-      // Since there's no API endpoint for updating topics directly,
-      // we'll just pass the updated topic back to the parent component
-      // which will handle updating the local state
-      onSave(updatedTopic);
+      // Pass the updated topic to the context handler
+      handleSaveEdit(updatedTopic);
     } catch (err) {
       console.error('Error saving topic:', err);
       setError('Failed to save topic. Please try again.');
@@ -129,7 +102,7 @@ const TopicEditor = ({ topic, documentId, onSave, onCancel }) => {
         <h3 className="text-xl font-semibold text-indigo-800">Edit Topic</h3>
         <button
           type="button"
-          onClick={onCancel}
+          onClick={handleCancelEdit}
           className="text-gray-400 hover:text-gray-600 transition-colors"
           disabled={isLoading}
           aria-label="Close editor"
@@ -216,7 +189,7 @@ const TopicEditor = ({ topic, documentId, onSave, onCancel }) => {
       <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">
         <button
           type="button"
-          onClick={onCancel}
+          onClick={handleCancelEdit}
           className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium"
           disabled={isLoading}
         >
@@ -241,17 +214,6 @@ const TopicEditor = ({ topic, documentId, onSave, onCancel }) => {
       </div>
     </div>
   );
-};
-
-TopicEditor.propTypes = {
-  topic: PropTypes.shape({
-    id: PropTypes.string,
-    title: PropTypes.string,
-    description: PropTypes.string
-  }),
-  documentId: PropTypes.string.isRequired,
-  onSave: PropTypes.func.isRequired,
-  onCancel: PropTypes.func.isRequired
 };
 
 export default TopicEditor

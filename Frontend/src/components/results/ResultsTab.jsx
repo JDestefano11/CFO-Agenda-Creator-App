@@ -1,10 +1,21 @@
 import React, { useState } from "react";
-import PropTypes from "prop-types";
+import { useResults } from "../../context/ResultsContext";
 
 /**
  * ResultsTab component displays the selected topic content in detail
  */
-const ResultsTab = ({ selectedTopic, allTopicsReviewed }) => {
+const ResultsTab = () => {
+  const { 
+    getTopicsData,
+    selectedTopic: selectedTopicId,
+    areAllTopicsReviewed,
+    handleShowConfirmationModal
+  } = useResults();
+  
+  // Get the selected topic data
+  const topics = getTopicsData();
+  const selectedTopic = selectedTopicId ? topics.find(topic => topic.id === selectedTopicId) : null;
+  const allTopicsReviewed = areAllTopicsReviewed();
   const [showError, setShowError] = useState(false);
   const handleApprove = () => {
     if (!allTopicsReviewed) {
@@ -16,7 +27,8 @@ const ResultsTab = ({ selectedTopic, allTopicsReviewed }) => {
     }
     
     console.log('Content approved');
-    // Add your approval logic here
+    // Show confirmation modal
+    handleShowConfirmationModal();
   };
   
   const handleReject = () => {
@@ -29,7 +41,6 @@ const ResultsTab = ({ selectedTopic, allTopicsReviewed }) => {
     }
     
     console.log('Content rejected');
-    // Add your rejection logic here
   };
 
   return (
@@ -102,15 +113,6 @@ const ResultsTab = ({ selectedTopic, allTopicsReviewed }) => {
       </div>
     </div>
   );
-};
-
-ResultsTab.propTypes = {
-  selectedTopic: PropTypes.shape({
-    id: PropTypes.number,
-    title: PropTypes.string,
-    content: PropTypes.string,
-  }),
-  allTopicsReviewed: PropTypes.bool,
 };
 
 export default ResultsTab;
