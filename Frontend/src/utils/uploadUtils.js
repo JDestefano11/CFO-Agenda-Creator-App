@@ -1,7 +1,12 @@
 import axios from 'axios';
 
 /**
- * Utility functions for document upload functionality
+ * 
+ * This file contains pure utility functions for handling document uploads:
+ * - Drag and drop event handlers
+ * - File processing
+ * - API calls for document upload and analysis
+ * - Error handling
  */
 
 /**
@@ -53,31 +58,37 @@ export const processFiles = (fileList) => {
  * @returns {string|null} - Document ID or null if not found
  */
 export const extractDocumentId = (response) => {
-  let documentId = null;
-
   // Direct extraction based on the known response structure
   if (response.data?.document?.id) {
-    documentId = response.data.document.id;
-    console.log("DIRECT EXTRACTION - Document ID:", documentId);
-    return documentId;
+    return response.data.document.id;
   }
 
   // Try parsing the response as a string
   if (response.data) {
     try {
       const responseStr = JSON.stringify(response.data);
-      const idMatch = responseStr.match(/"id"\\s*:\\s*"([^"]+)"/i);
+      const idMatch = responseStr.match(/"id"\s*:\s*"([^"]+)"/i);
       if (idMatch && idMatch[1]) {
-        documentId = idMatch[1];
-        console.log("REGEX EXTRACTION - Document ID:", documentId);
-        return documentId;
+        return idMatch[1];
       }
     } catch (e) {
-      console.error("Error parsing response:", e);
+      // Error parsing response - continue to return null
     }
   }
 
   return null;
+};
+
+/**
+ * API configuration
+ */
+export const API_CONFIG = {
+  BASE_URL: 'http://localhost:5000',
+  ENDPOINTS: {
+    UPLOAD: '/api/documents/upload',
+    ANALYZE: '/api/documents/{documentId}/analyze'
+  },
+  TIMEOUT: 30000 // 30 second timeout
 };
 
 /**
@@ -91,14 +102,14 @@ export const uploadDocument = async (file, authToken) => {
   formData.append("document", file);
 
   return await axios.post(
-    "http://localhost:5000/api/documents/upload",
+    `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.UPLOAD}`,
     formData,
     {
       headers: {
         "Content-Type": "multipart/form-data",
         Authorization: `Bearer ${authToken}`,
       },
-      timeout: 30000, // 30 second timeout
+      timeout: API_CONFIG.TIMEOUT,
       validateStatus: (status) => status < 500,
     }
   );
@@ -111,14 +122,17 @@ export const uploadDocument = async (file, authToken) => {
  * @returns {Promise} - Promise with response
  */
 export const analyzeDocument = async (documentId, authToken) => {
+  const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ANALYZE.replace('{documentId}', documentId)}`;
+  
   return await axios.post(
-    `http://localhost:5000/api/documents/${documentId}/analyze`,
+    url,
     {},
     {
       headers: {
         Authorization: `Bearer ${authToken}`,
         "Content-Type": "application/json",
       },
+      timeout: API_CONFIG.TIMEOUT
     }
   );
 };

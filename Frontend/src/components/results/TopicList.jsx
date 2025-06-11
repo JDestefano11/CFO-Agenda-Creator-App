@@ -64,14 +64,14 @@ const TopicList = () => {
 
             {/* Bullet points display */}
             <ul className={`text-sm ml-5 list-disc space-y-1 mb-2 ${isApproved ? 'text-green-700' : 'text-gray-600'}`}>
-              {bulletPoints.slice(0, 3).map((point, index) => (
+              {bulletPoints.slice(0, 4).map((point, index) => (
                 <li key={index} className="break-normal">
                   {point}
                 </li>
               ))}
-              {bulletPoints.length > 3 && (
+              {bulletPoints.length > 4 && (
                 <li className="text-gray-500 italic">
-                  ...and {bulletPoints.length - 3} more points
+                  ...and {bulletPoints.length - 4} more points
                 </li>
               )}
             </ul>

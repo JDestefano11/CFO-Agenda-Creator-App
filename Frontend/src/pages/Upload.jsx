@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
-import axios from "axios";
+import React, { useRef, useEffect, useState } from "react";
 import Loading from "../components/Loading";
 
 // Import our new components
@@ -8,25 +7,28 @@ import FilePreview from "../components/upload/FilePreview";
 import UploadButton from "../components/upload/UploadButton";
 import StatusMessages from "../components/upload/StatusMessages";
 
-// Import utility functions
-import {
-  handleDragEnter,
-  handleDragLeave,
-  handleDragOver,
-  processFiles,
-  extractDocumentId,
-  uploadDocument,
-  analyzeDocument,
-  getErrorMessage
-} from "../utils/uploadUtils";
+// Import custom hook
+import useUpload from "../hooks/useUpload";
 
 const DocumentUpload = () => {
-  const [files, setFiles] = useState([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [uploadError, setUploadError] = useState("");
-  const [showLoading, setShowLoading] = useState(false);
+  // Get all upload state and handlers from our custom hook
+  const {
+    files,
+    isDragging,
+    uploading,
+    uploadSuccess,
+    uploadError,
+    showLoading,
+    onDragEnter,
+    onDragLeave,
+    onDragOver,
+    onDrop,
+    onFileInputChange,
+    onRemoveFile,
+    onUpload,
+    onLoadingComplete
+  } = useUpload();
+  
   const [authToken, setAuthToken] = useState("");
   const fileInputRef = useRef(null);
 
@@ -38,114 +40,12 @@ const DocumentUpload = () => {
     }
   }, []);
 
-  // Using the imported utility functions but updating state locally
-  const onDragEnter = (e) => {
-    const stateUpdate = handleDragEnter(e);
-    setIsDragging(stateUpdate.isDragging);
-  };
-
-  const onDragLeave = (e) => {
-    const stateUpdate = handleDragLeave(e);
-    setIsDragging(stateUpdate.isDragging);
-  };
-
-  const onDragOver = handleDragOver;
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    if (e.dataTransfer.files) {
-      const processedFiles = processFiles(e.dataTransfer.files);
-      setFiles(processedFiles);
-    }
-  };
-
-  const handleFileInputChange = (e) => {
-    if (e.target.files) {
-      const processedFiles = processFiles(e.target.files);
-      setFiles(processedFiles);
-    }
-  };
-
-  const removeFile = (index) => {
-    setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
-  };
-
-  const handleUpload = async () => {
-    if (files.length === 0) return;
-
-    setUploadError("");
-    setUploadSuccess(false);
-    setUploading(true);
-
-    {/*Beginning of try block */}
-    try {
-
-      // Use the utility function to upload the document
-      const response = await uploadDocument(files[0], authToken);
-
-      // Use the utility function to extract document ID
-      const documentId = extractDocumentId(response);
-
-      // Store the document ID in localStorage for use in ResultsPage
-      if (documentId) {
-        localStorage.setItem("currentDocumentId", documentId);
-      }
-
-      // Show success message
-      setUploadSuccess(true);
-      setUploading(false);
-      setFiles([]);
-
-      // Start analysis if we have a document ID
-      if (documentId) {
-        try {
-          // Use the utility function to start analysis
-          const analysisResponse = await analyzeDocument(documentId, authToken);
-
-          // Store document ID in localStorage for the Loading component to access
-          localStorage.setItem("currentDocumentId", documentId);
-
-          // Show the loading screen with progress animation
-          setShowLoading(true);
-        } catch (analysisError) {
-          console.error("Error starting analysis:", analysisError);
-          setUploadError(
-            "Document uploaded but analysis could not be started. Please try again."
-          );
-        }
-      } else {
-        // If no document ID is found, show an error
-        setUploadError(
-          "Upload succeeded but document ID was not returned. Please try again."
-        );
-      }
-    } catch (error) {
-
-      // Use the utility function to get appropriate error message
-      setUploadError(getErrorMessage(error));
-    } finally {
-      setUploading(false);
-    }
-  };
-  {/*End of try block */}
-
-  // Function to handle completion of loading
-  const handleLoadingComplete = () => {
-    setShowLoading(false);
-    setFiles([]);
-    // Clear the document ID from localStorage
-    localStorage.removeItem("currentDocumentId");
-  };
-
   // If showing loading screen, render the Loading component
   // Use a fixed height container to prevent page movement
   if (showLoading) {
     return (
       <div className="min-h-screen">
-        <Loading duration={5} onComplete={handleLoadingComplete} />
+        <Loading duration={5} onComplete={onLoadingComplete} />
       </div>
     );
   }
@@ -205,9 +105,9 @@ const DocumentUpload = () => {
               handleDragEnter={onDragEnter}
               handleDragLeave={onDragLeave}
               handleDragOver={onDragOver}
-              handleDrop={handleDrop}
+              handleDrop={onDrop}
               fileInputRef={fileInputRef}
-              handleFileInputChange={handleFileInputChange}
+              handleFileInputChange={onFileInputChange}
             />
           )}
 
@@ -219,12 +119,12 @@ const DocumentUpload = () => {
               </h3>
               <FilePreview 
                 file={files[0]} 
-                onRemove={() => removeFile(0)} 
+                onRemove={() => onRemoveFile(0)} 
               />
 
               <div className="mt-6 flex justify-center">
                 <UploadButton 
-                  onClick={handleUpload} 
+                  onClick={() => onUpload(authToken)} 
                   uploading={uploading} 
                 />
               </div>
