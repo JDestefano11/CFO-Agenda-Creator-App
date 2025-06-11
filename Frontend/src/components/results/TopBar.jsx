@@ -16,7 +16,7 @@ const TopBar = ({ activeTab, setActiveTab }) => {
         <div className="flex w-full">
           <button 
             onClick={() => setActiveTab('results')}
-            className={`flex-1 py-2 text-center transition-colors duration-200 ${
+            className={`flex-1 py-2 text-center transition-colors duration-200 cursor-pointer ${
               activeTab === 'results' 
                 ? 'text-blue-600 font-medium bg-blue-50' 
                 : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
@@ -26,7 +26,7 @@ const TopBar = ({ activeTab, setActiveTab }) => {
           </button>
           <button 
             onClick={() => setActiveTab('history')}
-            className={`flex-1 py-2 text-center transition-colors duration-200 ${
+            className={`flex-1 py-2 text-center transition-colors duration-200 cursor-pointer ${
               activeTab === 'history' 
                 ? 'text-blue-600 font-medium bg-blue-50' 
                 : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'

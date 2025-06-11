@@ -9,6 +9,8 @@ import ResultsTab from "../components/results/ResultsTab";
 import HistoryTab from "../components/results/HistoryTab";
 import LeftPanel from "../components/results/LeftPanel";
 import RightPanel from "../components/results/RightPanel";
+import TopicEditor from "../components/results/TopicEditor";
+import { saveEditedTopic, getEditedTopicsForDocument } from '../utils/topicStorage';
 
 const Results = () => {
   const location = useLocation();
@@ -21,6 +23,7 @@ const Results = () => {
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [approvedTopics, setApprovedTopics] = useState([]);
   const [rejectedTopics, setRejectedTopics] = useState([]);
+  const [editingTopic, setEditingTopic] = useState(null);
 
   useEffect(() => {
     const fetchDocumentAnalysis = async () => {
@@ -51,7 +54,41 @@ const Results = () => {
         );
 
         if (response.data.analyzed) {
-          setDocumentData(response.data);
+          // Get any previously edited topics for this document
+          const editedTopics = getEditedTopicsForDocument(documentId);
+          
+          // Apply edited topics to the response data if they exist
+          if (Object.keys(editedTopics).length > 0) {
+            // Create a deep copy of the response data
+            const updatedData = JSON.parse(JSON.stringify(response.data));
+            
+            // Update topics in the new API format
+            if (updatedData.analysis && updatedData.analysis.topics) {
+              updatedData.analysis.topics = updatedData.analysis.topics.map(topic => {
+                const editedTopic = editedTopics[topic.id];
+                return editedTopic ? { ...topic, ...editedTopic } : topic;
+              });
+            }
+            
+            // Update topics in the old API format (keyTopics and topicDetails)
+            if (updatedData.keyTopics && updatedData.keyTopics.length > 0) {
+              Object.keys(editedTopics).forEach(topicId => {
+                const index = parseInt(topicId) - 1; // Topic IDs are 1-based in our UI
+                if (index >= 0 && index < updatedData.keyTopics.length) {
+                  updatedData.keyTopics[index] = editedTopics[topicId].title;
+                  
+                  if (!updatedData.analysis) updatedData.analysis = {};
+                  if (!updatedData.analysis.topicDetails) updatedData.analysis.topicDetails = {};
+                  
+                  updatedData.analysis.topicDetails[index] = editedTopics[topicId].description;
+                }
+              });
+            }
+            
+            setDocumentData(updatedData);
+          } else {
+            setDocumentData(response.data);
+          }
         } else {
           setError("Document analysis is still in progress or not available.");
         }
@@ -101,6 +138,11 @@ const Results = () => {
       });
     }
     
+    // Remove any bullet characters from the beginning of each point
+    points = points.map(point => {
+      return point.replace(/^[\u2022\-\*\s]+/, '').trim();
+    });
+    
     return points;
   };
   
@@ -143,7 +185,66 @@ const Results = () => {
   const handleEdit = (e, topic) => {
     e.stopPropagation();
     console.log("Editing topic:", topic);
-    // Implement edit functionality here
+    setEditingTopic(topic);
+  };
+
+  // Handle save after editing
+  const handleSaveEdit = (updatedTopic) => {
+    console.log("Saving updated topic:", updatedTopic);
+    
+    // Get document ID for storage
+    const documentId = 
+      (location.state && location.state.documentId) ||
+      localStorage.getItem("currentDocumentId");
+    
+    // Create a deep copy of the document data
+    const updatedDocumentData = { ...documentData };
+    
+    // Update the document data with the edited topic
+    if (updatedDocumentData?.analysis?.topics && updatedDocumentData.analysis.topics.length > 0) {
+      // Find the topic by ID in the topics array
+      const topicIndex = updatedDocumentData.analysis.topics.findIndex(t => t.id === updatedTopic.id);
+      
+      if (topicIndex !== -1) {
+        // Update the existing topic
+        updatedDocumentData.analysis.topics[topicIndex] = {
+          ...updatedDocumentData.analysis.topics[topicIndex],
+          title: updatedTopic.title,
+          description: updatedTopic.description
+        };
+      }
+    } 
+    // Fallback to keyTopics if that's what we're using
+    else if (updatedDocumentData?.keyTopics && updatedDocumentData.keyTopics.length > 0) {
+      const topicIndex = updatedTopic.id - 1; // Topic IDs are 1-based in our UI
+      
+      if (topicIndex >= 0 && topicIndex < updatedDocumentData.keyTopics.length) {
+        // Update the topic title in keyTopics array
+        updatedDocumentData.keyTopics[topicIndex] = updatedTopic.title;
+        
+        // Update the topic description in topicDetails
+        if (!updatedDocumentData.analysis) updatedDocumentData.analysis = {};
+        if (!updatedDocumentData.analysis.topicDetails) updatedDocumentData.analysis.topicDetails = {};
+        
+        updatedDocumentData.analysis.topicDetails[topicIndex] = updatedTopic.description;
+      }
+    }
+    
+    // Update the state with the modified document data
+    setDocumentData(updatedDocumentData);
+    
+    // Save the edited topic to local storage for persistence across page refreshes
+    if (documentId) {
+      saveEditedTopic(documentId, updatedTopic);
+    }
+    
+    // Close the editor
+    setEditingTopic(null);
+  };
+
+  // Handle cancel editing
+  const handleCancelEdit = () => {
+    setEditingTopic(null);
   };
   
   if (loading) {
@@ -194,7 +295,8 @@ const Results = () => {
         topicsData.push({
           id: index + 1,
           title: topic.title,
-          content: topic.description
+          content: topic.description,
+          description: topic.description // Added for TopicEditor compatibility
         });
       });
     } 
@@ -205,13 +307,31 @@ const Results = () => {
         topicsData.push({
           id: index + 1,
           title: topic,
-          content: description
+          content: description,
+          description: description // Added for TopicEditor compatibility
         });
       });
     }
     
+    // Get document ID for the TopicEditor
+    const documentId = 
+      (location.state && location.state.documentId) ||
+      localStorage.getItem("currentDocumentId");
+    
     return (
       <div className="h-full p-4">
+        {/* Show TopicEditor if a topic is being edited */}
+        {editingTopic ? (
+          <div className="mb-6 animate-fadeIn">
+            <TopicEditor
+              topic={editingTopic}
+              documentId={documentId}
+              onSave={handleSaveEdit}
+              onCancel={handleCancelEdit}
+            />
+          </div>
+        ) : null}
+        
         {topicsData.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-500">No topics available</p>
@@ -272,7 +392,7 @@ const Results = () => {
                   {/* Action buttons */}
                   <div className="flex justify-end mt-3 space-x-2">
                     <button
-                      className={`p-1.5 rounded-full ${approvedTopics.includes(topic.id) ? "bg-green-500 text-white" : "bg-green-100 hover:bg-green-200 text-green-700"} transition-colors`}
+                      className={`p-1.5 rounded-full cursor-pointer ${approvedTopics.includes(topic.id) ? "bg-green-500 text-white" : "bg-green-100 hover:bg-green-200 text-green-700"} transition-colors`}
                       onClick={(e) => handleApprove(e, topic.id)}
                       title="Approve"
                     >
@@ -290,7 +410,7 @@ const Results = () => {
                       </svg>
                     </button>
                     <button
-                      className="p-1.5 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors"
+                      className="p-1.5 rounded-full cursor-pointer bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors"
                       onClick={(e) => handleEdit(e, topic)}
                       title="Edit"
                     >
@@ -304,7 +424,7 @@ const Results = () => {
                       </svg>
                     </button>
                     <button
-                      className={`p-1.5 rounded-full ${rejectedTopics.includes(topic.id) ? "bg-red-500 text-white" : "bg-red-100 hover:bg-red-200 text-red-700"} transition-colors`}
+                      className={`p-1.5 rounded-full cursor-pointer ${rejectedTopics.includes(topic.id) ? "bg-red-500 text-white" : "bg-red-100 hover:bg-red-200 text-red-700"} transition-colors`}
                       onClick={(e) => handleReject(e, topic.id)}
                       title="Reject"
                     >
