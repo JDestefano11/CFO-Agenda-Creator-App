@@ -85,15 +85,31 @@ const Results = () => {
   const formatContentAsBullets = (content) => {
     if (!content) return [];
     
-    // Split content by sentences and create bullet points
-    const sentences = content.split(/\.\s+/);
-    return sentences.filter(sentence => sentence.trim().length > 0);
+    // First try to split by newlines
+    let points = content.split('\n').filter(line => line.trim() !== '');
+    
+    // If we only got one item, try to split by sentences
+    if (points.length <= 1) {
+      points = content.split(/\.\s+/).filter(sentence => sentence.trim().length > 0);
+      
+      // Add periods back to sentences if they were removed during splitting
+      points = points.map(point => {
+        if (!point.endsWith('.') && !point.endsWith('!') && !point.endsWith('?')) {
+          return point + '.';
+        }
+        return point;
+      });
+    }
+    
+    return points;
   };
   
   // Handle topic selection
   const handleTopicSelect = (topicId) => {
     setSelectedTopic(topicId);
   };
+  
+  // This comment intentionally left to maintain code structure
   
   // Handle topic approval
   const handleApprove = (e, topicId) => {
@@ -181,7 +197,9 @@ const Results = () => {
           content: topic.description
         });
       });
-    } else if (documentData?.keyTopics && documentData.keyTopics.length > 0) {
+    } 
+    // Fallback to keyTopics if available (older API format)
+    else if (documentData?.keyTopics && documentData.keyTopics.length > 0) {
       documentData.keyTopics.forEach((topic, index) => {
         const description = documentData.analysis?.topicDetails?.[index] || "No description available";
         topicsData.push({
@@ -193,13 +211,123 @@ const Results = () => {
     }
     
     return (
-      <LeftPanel 
-        topicsData={topicsData}
-        selectedTopic={selectedTopic}
-        approvedTopics={approvedTopics}
-        rejectedTopics={rejectedTopics}
-        handleTopicSelect={handleTopicSelect}
-      />
+      <div className="h-full p-4">
+        {topicsData.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No topics available</p>
+          </div>
+        ) : (
+          <div className="space-y-4 max-w-[85%] mx-auto">
+            {topicsData.map((topic) => {
+              const bulletPoints = formatContentAsBullets(topic.content);
+
+              return (
+                <div
+                  key={topic.id}
+                  className={`w-full p-6 rounded-lg relative cursor-pointer transition-all shadow-sm hover:shadow-md
+                    ${approvedTopics.includes(topic.id) ? "border-2 border-green-500 bg-green-100" : ""}
+                    ${rejectedTopics.includes(topic.id) ? "border-2 border-red-500 bg-red-50" : ""}
+                    ${!approvedTopics.includes(topic.id) && !rejectedTopics.includes(topic.id) && selectedTopic === topic.id ? "border-2 border-indigo-600 bg-indigo-50" : ""}
+                    ${!approvedTopics.includes(topic.id) && !rejectedTopics.includes(topic.id) && selectedTopic !== topic.id ? "border border-gray-200 hover:bg-gray-50" : ""}
+                  `}
+                  onClick={() => handleTopicSelect(topic.id)}
+                >
+                  {/* Approval/Rejection badges */}
+                  {approvedTopics.includes(topic.id) && (
+                    <div className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4">
+                      <div className="w-8 h-8 rounded-full bg-green-500 shadow-lg flex items-center justify-center border-2 border-white animate-[pulse_0.3s_ease-out]">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    </div>
+                  )}
+                  {rejectedTopics.includes(topic.id) && (
+                    <div className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4">
+                      <div className="w-8 h-8 rounded-full bg-red-500 shadow-lg flex items-center justify-center border-2 border-white animate-[pulse_0.3s_ease-out]">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    </div>
+                  )}
+                  <h3 className={`font-medium mb-2 ${approvedTopics.includes(topic.id) ? 'text-green-800' : 'text-gray-800'}`}>
+                    {topic.title}
+                  </h3>
+
+                  {/* Bullet points display */}
+                  <ul className={`text-sm ml-5 list-disc space-y-1 mb-2 ${approvedTopics.includes(topic.id) ? 'text-green-700' : 'text-gray-600'}`}>
+                    {bulletPoints.slice(0, 3).map((point, index) => (
+                      <li key={index} className="break-normal">
+                        {point}
+                      </li>
+                    ))}
+                    {bulletPoints.length > 3 && (
+                      <li className="text-gray-500 italic">
+                        ...and {bulletPoints.length - 3} more points
+                      </li>
+                    )}
+                  </ul>
+
+                  {/* Action buttons */}
+                  <div className="flex justify-end mt-3 space-x-2">
+                    <button
+                      className={`p-1.5 rounded-full ${approvedTopics.includes(topic.id) ? "bg-green-500 text-white" : "bg-green-100 hover:bg-green-200 text-green-700"} transition-colors`}
+                      onClick={(e) => handleApprove(e, topic.id)}
+                      title="Approve"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      className="p-1.5 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors"
+                      onClick={(e) => handleEdit(e, topic)}
+                      title="Edit"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                      </svg>
+                    </button>
+                    <button
+                      className={`p-1.5 rounded-full ${rejectedTopics.includes(topic.id) ? "bg-red-500 text-white" : "bg-red-100 hover:bg-red-200 text-red-700"} transition-colors`}
+                      onClick={(e) => handleReject(e, topic.id)}
+                      title="Reject"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     );
   };
 

@@ -9,23 +9,32 @@ const TopBar = ({ activeTab, setActiveTab }) => {
         <h2 className="text-xl font-semibold">Document Analysis</h2>
       </div>
       
-      {/* Vertical divider line */}
-      <div className="absolute left-[70%] top-0 bottom-0 w-[1px] bg-gray-300"></div>
-      
-      {/* Right side - Tabs */}
-      <div className="w-[30%] flex items-center pl-6">
-        <button 
-          onClick={() => setActiveTab('results')}
-          className={`mr-4 ${activeTab === 'results' ? 'font-bold text-blue-600' : 'text-gray-600'}`}
-        >
-          Results
-        </button>
-        <button 
-          onClick={() => setActiveTab('history')}
-          className={`${activeTab === 'history' ? 'font-bold text-blue-600' : 'text-gray-600'}`}
-        >
-          History
-        </button>
+     {/* Vertical divider line */}
+     <div className="absolute left-[70%] top-0 bottom-0 w-[1px] bg-gray-300"></div>
+  {/* Right side - Tabs */}
+  <div className="w-[30%] flex items-end justify-center pb-0">
+        <div className="flex w-full">
+          <button 
+            onClick={() => setActiveTab('results')}
+            className={`flex-1 py-2 text-center transition-colors duration-200 ${
+              activeTab === 'results' 
+                ? 'text-blue-600 font-medium bg-blue-50' 
+                : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+            }`}
+          >
+            Results
+          </button>
+          <button 
+            onClick={() => setActiveTab('history')}
+            className={`flex-1 py-2 text-center transition-colors duration-200 ${
+              activeTab === 'history' 
+                ? 'text-blue-600 font-medium bg-blue-50' 
+                : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+            }`}
+          >
+            History
+          </button>
+        </div>
       </div>
     </div>
   );
