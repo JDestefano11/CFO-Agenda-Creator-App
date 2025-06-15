@@ -7,7 +7,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Loading from "./components/Loading";
 import Results from "./pages/Results";
-
+import Export from "./pages/Export";
 const App = () => {
   return (
     <>
@@ -45,6 +45,13 @@ const App = () => {
         />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        
+
+        <Route
+          path="/export"
+          element={<Export />}
+        />
+  
         <Route path="*" element={<Navigate to="/" />} />
         
       </Routes>

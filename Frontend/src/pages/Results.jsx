@@ -7,7 +7,7 @@ import TopicEditor from "../components/results/TopicEditor";
 import TopicList from "../components/results/TopicList";
 import ConfirmationModal from "../components/results/ConfirmationModal";
 import OutputModal from "../components/OutputModal";
-import LoadingPage from "../components/LoadingPage";
+import LoadingPage from "./LoadingPage";
 import { ResultsProvider, useResults } from '../context/ResultsContext';
 import { generateExportContent } from '../utils/exportUtils';
 
@@ -88,7 +88,7 @@ const ResultsContent = () => {
       
       if (result.success) {
         // Navigate to the export page
-        navigate('/export-share', { state: { documentId: docId } });
+        navigate('/export', { state: { documentId: docId } });
       } else {
         if (result.authError) {
           navigate('/login');
