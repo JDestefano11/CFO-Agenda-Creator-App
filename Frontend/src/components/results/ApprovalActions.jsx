@@ -8,7 +8,8 @@ import { useResults } from "../../context/ResultsContext";
 const ApprovalActions = () => {
   const { 
     areAllTopicsReviewed,
-    handleShowConfirmationModal
+    handleShowConfirmationModal,
+    handleConfirmApproval
   } = useResults();
   
   const [showError, setShowError] = useState(false);

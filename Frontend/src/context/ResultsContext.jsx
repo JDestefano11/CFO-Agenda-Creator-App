@@ -32,6 +32,7 @@ export const ResultsProvider = ({ children }) => {
   const [rejectedTopics, setRejectedTopics] = useState([]);
   const [editingTopic, setEditingTopic] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isOutputModalOpen, setIsOutputModalOpen] = useState(false);
   
   // Fetch document analysis data and load saved state
   useEffect(() => {
@@ -274,7 +275,7 @@ export const ResultsProvider = ({ children }) => {
 
   // Confirm approval handler
   const handleConfirmApproval = () => {
-    // Close the modal
+    // Close the confirmation modal
     setIsConfirmModalOpen(false);
     
     // Get the document ID
@@ -282,14 +283,15 @@ export const ResultsProvider = ({ children }) => {
       (location.state && location.state.documentId) ||
       localStorage.getItem("currentDocumentId");
     
-    // Navigate to the export page with the document ID and approved topics
-    navigate("/export", {
-      state: {
-        documentId,
-        approvedTopics,
-        rejectedTopics
-      }
-    });
+    // Store document ID in localStorage for persistence
+    if (documentId) {
+      localStorage.setItem("currentDocumentId", documentId);
+    }
+    
+    // Open the output modal
+    setIsOutputModalOpen(true);
+    
+    console.log('Opening output modal with document ID:', documentId);
   };
 
   // Check if all topics are reviewed
@@ -315,6 +317,8 @@ export const ResultsProvider = ({ children }) => {
     editingTopic,
     isConfirmModalOpen,
     setIsConfirmModalOpen,
+    isOutputModalOpen,
+    setIsOutputModalOpen,
     handleTopicSelect,
     handleApprove,
     handleReject,
@@ -325,7 +329,8 @@ export const ResultsProvider = ({ children }) => {
     handleConfirmApproval,
     areAllTopicsReviewed,
     getTopicsData,
-    navigate
+    navigate,
+    location
   };
 
   return (

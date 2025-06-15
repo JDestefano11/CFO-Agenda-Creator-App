@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import TopBar from "../components/results/TopBar";
 import PageLayout from "../components/results/PageLayout";
 import HistoryTab from "../components/results/HistoryTab";
@@ -6,7 +6,10 @@ import RightPanel from "../components/results/RightPanel";
 import TopicEditor from "../components/results/TopicEditor";
 import TopicList from "../components/results/TopicList";
 import ConfirmationModal from "../components/results/ConfirmationModal";
+import OutputModal from "../components/OutputModal";
+import LoadingPage from "../components/LoadingPage";
 import { ResultsProvider, useResults } from '../context/ResultsContext';
+import { generateExportContent } from '../utils/exportUtils';
 
 // Main Results component that uses the context
 const ResultsContent = () => {
@@ -19,12 +22,20 @@ const ResultsContent = () => {
     editingTopic,
     isConfirmModalOpen,
     setIsConfirmModalOpen,
+    isOutputModalOpen,
+    setIsOutputModalOpen,
     handleSaveEdit,
     handleCancelEdit,
     handleConfirmApproval,
     getTopicsData,
-    navigate
+    navigate,
+    approvedTopics,
+    rejectedTopics,
+    location
   } = useResults();
+  
+  // State for export generation loading
+  const [isExportGenerating, setIsExportGenerating] = useState(false);
 
   // If loading, show loading message
   if (loading) {
@@ -53,6 +64,44 @@ const ResultsContent = () => {
       </div>
     );
   }
+  
+  // No need for handleConfirm as we're using handleConfirmApproval directly from context
+  
+  // Handle generate from OutputModal
+  const handleGenerate = async (options) => {
+    try {
+      // Get document ID from options or from localStorage
+      const docId = options.documentId || localStorage.getItem("currentDocumentId");
+      
+      if (!docId) {
+        alert("No document ID found. Please try again.");
+        setIsOutputModalOpen(false);
+        return;
+      }
+      
+      // Close the output modal and show loading page
+      setIsOutputModalOpen(false);
+      setIsExportGenerating(true);
+      
+      console.log('Generating export with options:', options);
+      const result = await generateExportContent(docId, options);
+      
+      if (result.success) {
+        // Navigate to the export page
+        navigate('/export-share', { state: { documentId: docId } });
+      } else {
+        if (result.authError) {
+          navigate('/login');
+        } else {
+          alert(result.error);
+        }
+      }
+    } catch (error) {
+      console.error("Error generating export:", error);
+      alert("An error occurred while generating export content.");
+      setIsExportGenerating(false);
+    }
+  };
 
   // Render left content with interactive topic cards
   const renderLeftContent = () => {
@@ -111,13 +160,26 @@ const ResultsContent = () => {
         title="Finalize Topics and Export"
         message={
           <div>
-            <p>You have reviewed all topics. Are you ready to finalize and proceed to export? Clicking confirm will take you to the export page where you can select your preferred format.</p>
+            <p>You have reviewed all topics. Are you ready to finalize and proceed to export? Clicking confirm will take you to the export options.</p>
           </div>
         }
         confirmText="Confirm"
         cancelText="Cancel"
         confirmButtonClass="bg-indigo-600 hover:bg-indigo-700"
       />
+      
+      {/* Output Modal */}
+      <OutputModal
+        isOpen={isOutputModalOpen}
+        onClose={() => setIsOutputModalOpen(false)}
+        onGenerate={handleGenerate}
+        documentId={location.state?.documentId || localStorage.getItem("currentDocumentId")}
+      />
+      
+      {/* Export Generation Loading Page */}
+      {isExportGenerating && (
+        <LoadingPage message="We're preparing your export content. This will just take a moment..." />
+      )}
     </div>
   );
 };

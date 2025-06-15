@@ -37,11 +37,11 @@ export const generateExport = async (req, res) => {
       });
     }
     
-    // Validate stakeholder
-    const validStakeholders = ['CFO', 'VP of Finance', 'Head of Accounting'];
-    if (!validStakeholders.includes(primaryStakeholder)) {
+    // Validate stakeholder - allow any stakeholder as we now support custom ones
+    // Just ensure it's not empty
+    if (!primaryStakeholder || primaryStakeholder.trim() === '') {
       return res.status(400).json({ 
-        message: `Invalid stakeholder. Must be one of: ${validStakeholders.join(', ')}` 
+        message: 'Primary stakeholder cannot be empty' 
       });
     }
     
