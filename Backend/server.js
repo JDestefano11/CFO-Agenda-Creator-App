@@ -88,9 +88,6 @@ app.get('/health', (req, res) => {
 }).catch(err => {
   console.error('Failed to connect to MongoDB', err);
   process.exit(1);
-}).catch(err => {
-  console.error('Failed to connect to MongoDB', err);
-  process.exit(1);
 });
 
 // Handle unhandled promise rejections globally
