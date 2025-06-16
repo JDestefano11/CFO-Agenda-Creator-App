@@ -12,11 +12,13 @@ import openaiRoutes from './routes/openaiRoutes.js';
 import documentExportRoutes from './routes/documentExportRoutes.js';
 import connectDB from './config/db.js';
 
-// Load environment variables
+// Load environment variables from .env
 dotenv.config();
 
-// Initialize express app
-const app = express();
+// Connect to MongoDB before starting the server
+connectDB().then(() => {
+  // Initialize express app
+  const app = express();
 
 // CORS middleware - configure for production and development
 const allowedOrigins = [
@@ -46,27 +48,27 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Get current directory for static file serving
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+  // Set up static file serving
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
 
-// Create uploads directory if it doesn't exist
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-app.use('/uploads', express.static(uploadDir));
+  // Ensure uploads directory exists and serve it statically
+  const uploadDir = path.join(__dirname, 'uploads');
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+  app.use('/uploads', express.static(uploadDir));
 
-// Serve static files from the public directory
-app.use(express.static(path.join(__dirname, 'public')));
+  // Serve public static files (your frontend build or static assets)
+  app.use(express.static(path.join(__dirname, 'public')));
 
-// Routes
-app.use('/api/users', userRoutes);
-app.use('/api/profile', profileRoutes);
-app.use('/api/documents', documentRoutes);
-app.use('/api/history', documentHistoryRoutes);
-app.use('/api/openai', openaiRoutes);
-app.use('/api/export', documentExportRoutes);
+  // API Routes
+  app.use('/api/users', userRoutes);
+  app.use('/api/profile', profileRoutes);
+  app.use('/api/documents', documentRoutes);
+  app.use('/api/history', documentHistoryRoutes);
+  app.use('/api/openai', openaiRoutes);
+  app.use('/api/export', documentExportRoutes);
 
 // Root route
 app.get('/', (req, res) => {
@@ -78,9 +80,7 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'Server is running' });
 });
 
-// Connect to database before starting server
-connectDB().then(() => {
-  // Start server
+  // Start server on port from environment or fallback to 5000
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
@@ -88,11 +88,14 @@ connectDB().then(() => {
 }).catch(err => {
   console.error('Failed to connect to MongoDB', err);
   process.exit(1);
+}).catch(err => {
+  console.error('Failed to connect to MongoDB', err);
+  process.exit(1);
 });
 
-// Handle unhandled promise rejections
+// Handle unhandled promise rejections globally
 process.on('unhandledRejection', (err) => {
-  console.log('UNHANDLED REJECTION! Shutting down...');
+  console.error('UNHANDLED REJECTION! Shutting down...');
   console.error(err.name, err.message);
   process.exit(1);
 });
