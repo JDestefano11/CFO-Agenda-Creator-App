@@ -166,25 +166,34 @@ const Signup = () => {
         lastName: formData.lastName,
         username: formData.username,
         email: formData.email,
-        confirmEmail: formData.confirmEmail,
         companyName: formData.companyName,
         companyType: formData.companyType,
         jobTitle: formData.jobTitle,
         password: formData.password,
-        confirmPassword: formData.confirmPassword,
       };
 
       try {
-        // Connect to backend API
-        const response = await axios.post(API_CONFIG.ENDPOINTS.SIGNUP, userData);
+        console.log("Attempting to connect to:", API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.SIGNUP);
+        
+        // Connect to backend API with explicit configuration
+        const response = await axios({
+          method: 'post',
+          url: API_CONFIG.ENDPOINTS.SIGNUP,
+          data: userData,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          withCredentials: true
+        });
 
         console.log("Registration successful:", response.data);
         setLoading(false);
         setSuccess(true);
 
         // Store token and user data if provided by the backend
-        saveToken(response.data.token);
-        saveUser(response.data.user);
+        if (response.data.token) saveToken(response.data.token);
+        if (response.data.user) saveUser(response.data.user);
 
         // Redirect to login after 2 seconds
         setTimeout(() => {
@@ -211,6 +220,7 @@ const Signup = () => {
           setError(
             "Cannot connect to the server. Please check your internet connection and try again."
           );
+          console.error("Network error details:", error);
         } else {
           setError("An unexpected error occurred. Please try again later.");
         }

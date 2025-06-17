@@ -33,12 +33,23 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // Connect to backend API
-      const response = await axios.post(API_CONFIG.ENDPOINTS.LOGIN, formData);
+      console.log("Attempting to connect to:", API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.LOGIN);
+      
+      // Connect to backend API with explicit configuration
+      const response = await axios({
+        method: 'post',
+        url: API_CONFIG.ENDPOINTS.LOGIN,
+        data: formData,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        withCredentials: true
+      });
 
       // Store token and user data if provided by the backend
-      saveToken(response.data.token);
-      saveUser(response.data.user);
+      if (response.data.token) saveToken(response.data.token);
+      if (response.data.user) saveUser(response.data.user);
 
       // Show success message
       setSuccess("Login successful!");
@@ -68,6 +79,7 @@ const Login = () => {
         setError(
           "Cannot connect to the server. Please check your internet connection and try again."
         );
+        console.error("Network error details:", error);
       } else {
         setError("An unexpected error occurred. Please try again later.");
       }

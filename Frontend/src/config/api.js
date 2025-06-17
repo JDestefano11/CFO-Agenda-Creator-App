@@ -8,6 +8,13 @@
 // Default to the Heroku URL if no environment variable is set
 const API_URL = import.meta.env.VITE_API_URL || 'https://cfo-agenda-creator-21d886a774e1.herokuapp.com';
 
+// Configure axios defaults for all requests
+import axios from 'axios';
+axios.defaults.baseURL = API_URL;
+axios.defaults.withCredentials = true;
+axios.defaults.headers.common['Content-Type'] = 'application/json';
+axios.defaults.headers.common['Accept'] = 'application/json';
+
 export const API_CONFIG = {
   BASE_URL: API_URL,
   ENDPOINTS: {
