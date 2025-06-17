@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { saveToken, saveUser } from "../utils/localStorage";
-import { calculatePasswordStrength } from "../utils/PasswordStrength";
+import { calculatePasswordStrength } from "../utils/passwordStrength";
 
 // Import components
 import StepIndicator from "../components/signup/StepIndicator";
