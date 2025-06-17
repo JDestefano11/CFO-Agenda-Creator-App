@@ -32,7 +32,7 @@ const Loading = ({ duration = 15, onComplete }) => {
         }
 
         // Use the correct API endpoint for document analysis
-        const response = await axios.post(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ANALYZE.replace('{documentId}', documentId)}`, {}, {
+        const response = await axios.post(API_CONFIG.ENDPOINTS.ANALYZE.replace('{documentId}', documentId), {}, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Content-Type': 'application/json'

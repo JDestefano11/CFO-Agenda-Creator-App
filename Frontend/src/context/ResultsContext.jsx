@@ -74,7 +74,7 @@ export const ResultsProvider = ({ children }) => {
       }
   
       try {
-        const { data } = await axios.get(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENT_ANALYSIS.replace('{documentId}', documentId)}`, {
+        const { data } = await axios.get(API_CONFIG.ENDPOINTS.DOCUMENT_ANALYSIS.replace('{documentId}', documentId), {
           headers: { Authorization: `Bearer ${token}` },
         });
   

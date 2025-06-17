@@ -27,7 +27,7 @@ const Navbar = () => {
   const fetchUserProfile = async (token) => {
     try {
       const response = await axios.get(
-        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PROFILE}`,
+        API_CONFIG.ENDPOINTS.PROFILE,
         {
           headers: {
             Authorization: `Bearer ${token}`,

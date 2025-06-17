@@ -34,7 +34,7 @@ const Login = () => {
 
     try {
       // Connect to backend API
-      const response = await axios.post("/api/users/login", formData);
+      const response = await axios.post(API_CONFIG.ENDPOINTS.LOGIN, formData);
 
       // Store token and user data if provided by the backend
       saveToken(response.data.token);

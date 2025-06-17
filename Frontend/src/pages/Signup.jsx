@@ -176,7 +176,7 @@ const Signup = () => {
 
       try {
         // Connect to backend API
-        const response = await axios.post("/api/users/signup", userData);
+        const response = await axios.post(API_CONFIG.ENDPOINTS.SIGNUP, userData);
 
         console.log("Registration successful:", response.data);
         setLoading(false);

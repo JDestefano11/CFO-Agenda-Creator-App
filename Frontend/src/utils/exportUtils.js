@@ -1,7 +1,10 @@
 import axios from 'axios';
 import { API_CONFIG } from '../config/api';
 
-const API_BASE_URL = `${API_CONFIG.BASE_URL}/api`;
+// Configure axios with base URL from centralized config
+axios.defaults.baseURL = API_CONFIG.BASE_URL;
+// Enable credentials for cookies if needed
+axios.defaults.withCredentials = true;
 
 /**
  * Generate export content for a document
@@ -20,7 +23,7 @@ export const generateExportContent = async (documentId, options) => {
     }
 
     const response = await axios.post(
-      `${API_BASE_URL}/export/${documentId}/generate`,
+      API_CONFIG.ENDPOINTS.EXPORT_GENERATE.replace('{documentId}', documentId),
       {
         outputType: options.outputType,
         primaryStakeholder: options.primaryStakeholder,
@@ -69,7 +72,7 @@ export const updateExportContent = async (documentId, modifiedContent) => {
     }
 
     const response = await axios.put(
-      `${API_BASE_URL}/export/${documentId}/update`,
+      API_CONFIG.ENDPOINTS.EXPORT_UPDATE.replace('{documentId}', documentId),
       { modifiedContent },
       {
         headers: { Authorization: `Bearer ${token}` }
@@ -114,7 +117,7 @@ export const finalizeExportContent = async (documentId, modifiedContent) => {
     }
 
     const response = await axios.post(
-      `${API_BASE_URL}/export/${documentId}/finalize`,
+      API_CONFIG.ENDPOINTS.EXPORT_FINALIZE.replace('{documentId}', documentId),
       { modifiedContent },
       {
         headers: { Authorization: `Bearer ${token}` }
@@ -158,7 +161,7 @@ export const getExportContent = async (documentId) => {
     }
 
     const response = await axios.get(
-      `${API_BASE_URL}/export/${documentId}`,
+      API_CONFIG.ENDPOINTS.EXPORT.replace('{documentId}', documentId),
       {
         headers: { Authorization: `Bearer ${token}` }
       }
