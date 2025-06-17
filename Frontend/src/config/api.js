@@ -6,7 +6,7 @@
  */
 
 // Default to the Heroku URL if no environment variable is set
-const API_URL = import.meta.env.VITE_API_URL || 'https://cfo-agenda-creator.herokuapp.com';
+const API_URL = import.meta.env.VITE_API_URL || 'https://cfo-agenda-creator-21d886a774e1.herokuapp.com';
 
 export const API_CONFIG = {
   BASE_URL: API_URL,

@@ -24,8 +24,8 @@ connectDB().then(() => {
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  // Add your production frontend URL here when deployed
-  // 'https://your-frontend-app.vercel.app'
+  // Production frontend URLs
+  'https://agenda-ai-application.onrender.com'
 ];
 
 app.use(cors({
