@@ -174,7 +174,7 @@ const Signup = () => {
 
       try {
         // Connect to backend API
-        const response = await axios.post("https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/users/signup", userData);
+        const response = await axios.post("api/users/signup", userData);
 
         console.log("Registration successful:", response.data);
         setLoading(false);

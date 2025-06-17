@@ -73,7 +73,7 @@ export const ResultsProvider = ({ children }) => {
       }
   
       try {
-        const { data } = await axios.get(`http://localhost:5000/api/documents/${documentId}/analysis`, {
+        const { data } = await axios.get(`https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/documents/${documentId}/analysis`, { 
           headers: { Authorization: `Bearer ${token}` },
         });
   

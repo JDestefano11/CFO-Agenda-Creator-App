@@ -26,7 +26,7 @@ const Navbar = () => {
   const fetchUserProfile = async (token) => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/users/profile",
+        "https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/users/profile",
         {
           headers: {
             Authorization: `Bearer ${token}`,

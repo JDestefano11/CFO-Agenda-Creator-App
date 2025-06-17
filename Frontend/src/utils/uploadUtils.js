@@ -83,7 +83,7 @@ export const extractDocumentId = (response) => {
  * API configuration
  */
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:5000',
+  BASE_URL: 'https://cfo-agenda-creator-21d886a774e1.herokuapp.com',
   ENDPOINTS: {
     UPLOAD: '/api/documents/upload',
     ANALYZE: '/api/documents/{documentId}/analyze'

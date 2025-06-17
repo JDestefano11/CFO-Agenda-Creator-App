@@ -31,7 +31,7 @@ const Loading = ({ duration = 15, onComplete }) => {
         }
 
         // Use the correct API endpoint for document analysis
-        const response = await axios.post(`http://localhost:5000/api/documents/${documentId}/analyze`, {}, {
+        const response = await axios.post(`https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/documents/${documentId}/analyze`,  {}, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Content-Type': 'application/json'

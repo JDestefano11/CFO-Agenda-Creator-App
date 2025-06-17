@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api';
 
 /**
  * Generate export content for a document

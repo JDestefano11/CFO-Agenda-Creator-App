@@ -4,7 +4,7 @@ import axios from "axios";
 import { saveToken, saveUser } from "../utils/localStorage";
 
 // Backend URL
-axios.defaults.baseURL = "http://localhost:5000";
+axios.defaults.baseURL = "https://cfo-agenda-creator-21d886a774e1.herokuapp.com/";
 // Enable credentials for cookies if needed
 axios.defaults.withCredentials = true;
 
