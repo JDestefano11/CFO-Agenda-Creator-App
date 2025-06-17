@@ -14,7 +14,7 @@ import SignupSidebar from "../components/signup/SignupSidebar";
 import FormNavigation from "../components/signup/FormNavigation";
 
 // Configure axios with base URL
-axios.defaults.baseURL = "http://localhost:5000";
+axios.defaults.baseURL = "https://cfo-agenda-creator-21d886a774e1.herokuapp.com/";
 axios.defaults.withCredentials = true;
 
 const Signup = () => {
@@ -174,7 +174,7 @@ const Signup = () => {
 
       try {
         // Connect to backend API
-        const response = await axios.post("/api/users/signup", userData);
+        const response = await axios.post("https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/users/signup", userData);
 
         console.log("Registration successful:", response.data);
         setLoading(false);
@@ -207,7 +207,7 @@ const Signup = () => {
           error.message === "Network Error"
         ) {
           setError(
-            "Cannot connect to the server. Please make sure the backend server is running at http://localhost:5000"
+            "Cannot connect to the server. Please make sure the backend server is running at https://cfo-agenda-creator-21d886a774e1.herokuapp.com/"
           );
         } else {
           setError("An unexpected error occurred. Please try again later.");
