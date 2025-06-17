@@ -52,9 +52,27 @@ connectDB().then(() => {
   app.use('/api/openai', openaiRoutes);
   app.use('/api/export', documentExportRoutes);
 
-  // Root route serves your index.html
+  // Root route - return API info instead of trying to serve an HTML file
   app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.status(200).json({
+      status: 'success',
+      message: 'CFO Agenda Creator API is running',
+      version: '1.0.0',
+      endpoints: [
+        '/api/users',
+        '/api/profile',
+        '/api/documents',
+        '/api/history',
+        '/api/openai',
+        '/api/export'
+      ],
+      health: '/health'
+    });
+  });
+
+  // Health check endpoint for Heroku
+  app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', message: 'Server is running' });
   });
 
   // Start server on port from environment or fallback to 5000
