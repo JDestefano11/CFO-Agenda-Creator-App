@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { saveToken, saveUser } from "../utils/localStorage";
 
-// Backend URL
-axios.defaults.baseURL = "http://localhost:5000";
+import { API_CONFIG } from "../config/api";
+
+// Configure axios with base URL from centralized config
+axios.defaults.baseURL = API_CONFIG.BASE_URL;
 // Enable credentials for cookies if needed
 axios.defaults.withCredentials = true;
 
@@ -64,7 +66,7 @@ const Login = () => {
         error.message === "Network Error"
       ) {
         setError(
-          "Cannot connect to the server. Please make sure the backend server is running at http://localhost:5000"
+          "Cannot connect to the server. Please check your internet connection and try again."
         );
       } else {
         setError("An unexpected error occurred. Please try again later.");

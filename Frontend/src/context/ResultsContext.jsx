@@ -4,6 +4,7 @@ import axios from 'axios';
 import { formatContentAsBullets } from '../utils/topicUtils';
 import { saveEditedTopic, getEditedTopicsForDocument } from '../utils/topicStorage';
 import { extractTopicsData, areAllTopicsReviewed as checkAllTopicsReviewed } from '../utils/topicUtils';
+import { API_CONFIG } from '../config/api';
 
 // Create the context
 const ResultsContext = createContext();
@@ -73,7 +74,7 @@ export const ResultsProvider = ({ children }) => {
       }
   
       try {
-        const { data } = await axios.get(`http://localhost:5000/api/documents/${documentId}/analysis`, {
+        const { data } = await axios.get(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENT_ANALYSIS.replace('{documentId}', documentId)}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
   

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { API_CONFIG } from '../config/api';
 
 /**
  * 
@@ -82,14 +83,8 @@ export const extractDocumentId = (response) => {
 /**
  * API configuration
  */
-export const API_CONFIG = {
-  BASE_URL: 'http://localhost:5000',
-  ENDPOINTS: {
-    UPLOAD: '/api/documents/upload',
-    ANALYZE: '/api/documents/{documentId}/analyze'
-  },
-  TIMEOUT: 30000 // 30 second timeout
-};
+// Using the centralized API configuration from config/api.js
+// The original API_CONFIG is now imported at the top of the file
 
 /**
  * Uploads a document to the server

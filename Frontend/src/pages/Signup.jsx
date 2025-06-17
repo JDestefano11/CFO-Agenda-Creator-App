@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { saveToken, saveUser } from "../utils/localStorage";
-import { calculatePasswordStrength } from "../utils/PasswordStrength";
+import { calculatePasswordStrength } from "../utils/passwordStrength";
 
 // Import components
 import StepIndicator from "../components/signup/StepIndicator";
@@ -13,8 +13,10 @@ import SignupBackground from "../components/signup/SignupBackground";
 import SignupSidebar from "../components/signup/SignupSidebar";
 import FormNavigation from "../components/signup/FormNavigation";
 
-// Configure axios with base URL
-axios.defaults.baseURL = "http://localhost:5000";
+import { API_CONFIG } from "../config/api";
+
+// Configure axios with base URL from centralized config
+axios.defaults.baseURL = API_CONFIG.BASE_URL;
 axios.defaults.withCredentials = true;
 
 const Signup = () => {
@@ -207,7 +209,7 @@ const Signup = () => {
           error.message === "Network Error"
         ) {
           setError(
-            "Cannot connect to the server. Please make sure the backend server is running at http://localhost:5000"
+            "Cannot connect to the server. Please check your internet connection and try again."
           );
         } else {
           setError("An unexpected error occurred. Please try again later.");

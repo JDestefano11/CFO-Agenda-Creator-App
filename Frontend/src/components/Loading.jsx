@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiLoader } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_CONFIG } from '../config/api';
 
 const Loading = ({ duration = 15, onComplete }) => {
   const [progress, setProgress] = useState(0);
@@ -31,7 +32,7 @@ const Loading = ({ duration = 15, onComplete }) => {
         }
 
         // Use the correct API endpoint for document analysis
-        const response = await axios.post(`http://localhost:5000/api/documents/${documentId}/analyze`, {}, {
+        const response = await axios.post(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ANALYZE.replace('{documentId}', documentId)}`, {}, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Content-Type': 'application/json'

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_CONFIG } from "../config/api";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
@@ -26,7 +27,7 @@ const Navbar = () => {
   const fetchUserProfile = async (token) => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/users/profile",
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PROFILE}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
