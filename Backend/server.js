@@ -24,7 +24,8 @@ connectDB().then(() => {
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-'https://agenda-ai-application.onrender.com/'
+'https://agenda-ai-application.onrender.com/',
+'https://cfo-agenda-creator-21d886a774e1.herokuapp.com/'
  
 ];
 
