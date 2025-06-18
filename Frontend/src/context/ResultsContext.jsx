@@ -304,6 +304,28 @@ export const ResultsProvider = ({ children }) => {
     return extractTopicsData(documentData);
   };
 
+  // Simplified function aliases for the HistoryTab component
+  const approveTopic = (topicId) => handleApprove({ stopPropagation: () => {} }, topicId);
+  const rejectTopic = (topicId) => handleReject({ stopPropagation: () => {} }, topicId);
+  const resetTopic = (topicId) => {
+    // Remove from both approved and rejected lists
+    const newApprovedTopics = approvedTopics.filter(id => id !== topicId);
+    const newRejectedTopics = rejectedTopics.filter(id => id !== topicId);
+    
+    setApprovedTopics(newApprovedTopics);
+    setRejectedTopics(newRejectedTopics);
+    
+    // Update localStorage
+    const documentId = location.state?.documentId || localStorage.getItem("currentDocumentId");
+    if (documentId) {
+      localStorage.setItem(`${documentId}_approvedTopics`, JSON.stringify(newApprovedTopics));
+      localStorage.setItem(`${documentId}_rejectedTopics`, JSON.stringify(newRejectedTopics));
+    }
+  };
+  
+  // Define saveTopic as an alias for handleSaveEdit
+  const saveTopic = handleSaveEdit;
+
   // Context value
   const value = {
     documentData,
@@ -312,25 +334,32 @@ export const ResultsProvider = ({ children }) => {
     mainTab,
     setMainTab,
     selectedTopic,
+    setSelectedTopic,
     approvedTopics,
     rejectedTopics,
+    approveTopic,
+    rejectTopic,
+    resetTopic,
     editingTopic,
+    setEditingTopic,
+    saveTopic,
     isConfirmModalOpen,
     setIsConfirmModalOpen,
     isOutputModalOpen,
     setIsOutputModalOpen,
-    handleTopicSelect,
-    handleApprove,
-    handleReject,
-    handleEdit,
-    handleSaveEdit,
-    handleCancelEdit,
-    handleShowConfirmationModal,
-    handleConfirmApproval,
+    generateOutput: handleConfirmApproval,
     areAllTopicsReviewed,
     getTopicsData,
     navigate,
-    location
+    location,
+    // Add back the original function names for backward compatibility
+    handleSaveEdit,
+    handleCancelEdit,
+    handleConfirmApproval,
+    handleTopicSelect,
+    handleApprove,
+    handleReject,
+    handleEdit
   };
 
   return (
