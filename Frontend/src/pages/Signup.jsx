@@ -15,7 +15,7 @@ import FormNavigation from "../components/signup/FormNavigation";
 
 // Configure axios with base URL
 axios.defaults.baseURL = "https://cfo-agenda-creator-21d886a774e1.herokuapp.com/";
-axios.defaults.withCredentials = true;
+
 
 const Signup = () => {
   const navigate = useNavigate();

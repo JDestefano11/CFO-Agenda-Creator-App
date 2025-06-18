@@ -5,8 +5,7 @@ import { saveToken, saveUser } from "../utils/localStorage";
 
 // Backend URL
 axios.defaults.baseURL = "https://cfo-agenda-creator-21d886a774e1.herokuapp.com/";
-// Enable credentials for cookies if needed
-axios.defaults.withCredentials = true;
+
 
 const Login = () => {
   const [formData, setFormData] = useState({

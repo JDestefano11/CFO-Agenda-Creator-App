@@ -24,11 +24,10 @@ connectDB().then(() => {
 // Use a simpler CORS configuration that allows all origins for now
 app.use(cors({
   origin: '*', // Allow all origins
-  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Authorization']
 }));
-
 // Other middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
