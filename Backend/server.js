@@ -21,25 +21,9 @@ connectDB().then(() => {
   const app = express();
 
 // CORS middleware - configure for production and development
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-'https://agenda-ai-application.onrender.com/',
-'https://cfo-agenda-creator-21d886a774e1.herokuapp.com/'
- 
-];
-
+// Use a simpler CORS configuration that allows all origins for now
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
+  origin: '*', // Allow all origins
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
