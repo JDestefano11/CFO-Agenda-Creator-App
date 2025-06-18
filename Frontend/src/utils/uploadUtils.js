@@ -101,20 +101,23 @@ export const uploadDocument = async (file, authToken) => {
   const formData = new FormData();
   formData.append("document", file);
 
-  return await axios.post(
-    `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.UPLOAD}`,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        Authorization: `Bearer ${authToken}`,
-      },
-      timeout: API_CONFIG.TIMEOUT,
-      validateStatus: (status) => status < 500,
-    }
-  );
+  try {
+    const response = await axios.post(
+      "https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/documents/upload",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "Authorization": `Bearer ${authToken}`
+        }
+      }
+    );
+    return response;
+  } catch (error) {
+    console.error("Upload error:", error.response?.data || error.message);
+    throw error;
+  }
 };
-
 /**
  * Starts document analysis
  * @param {string} documentId - Document ID to analyze
