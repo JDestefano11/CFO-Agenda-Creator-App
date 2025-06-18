@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// Direct Heroku URL - confirmed by user
+// Direct Heroku URL
 const HEROKU_URL = 'https://cfo-agenda-creator-21d886a774e1.herokuapp.com';
 
 /**

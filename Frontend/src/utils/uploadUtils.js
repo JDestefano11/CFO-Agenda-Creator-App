@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 
 /**
@@ -79,9 +80,9 @@ export const extractDocumentId = (response) => {
   return null;
 };
 
-// Direct Heroku endpoint URL - confirmed by user
+// Direct Heroku endpoint URL
 const HEROKU_URL = 'https://cfo-agenda-creator-21d886a774e1.herokuapp.com';
-const TIMEOUT = 60000; // 60 second timeout for slow connections
+const TIMEOUT = 30000; // 30 second timeout
 
 /**
  * Uploads a document to the server
@@ -97,88 +98,33 @@ export const uploadDocument = async (file, authToken) => {
   formData.append("document", file);
 
   try {
-    // Log detailed information for debugging
-    console.log('=== UPLOAD ATTEMPT DETAILS ===');
-    console.log('File:', file.name, 'Size:', file.size, 'Type:', file.type);
-    console.log('Auth token present:', !!authToken);
-    
-    // Use the exact endpoint path that matches the backend routes
-    const uploadUrl = HEROKU_URL + '/api/documents/upload';
-    console.log('Upload URL:', uploadUrl);
-    
-    // Check if the file is actually a File object
-    if (!(file instanceof File)) {
-      console.error('Error: Not a valid File object');
-      throw new Error('Invalid file object');
-    }
+    console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
     
     // Make the POST request to the upload endpoint
-    const response = await axios({
-      method: 'post',
-      url: uploadUrl,
-      data: formData,
-      headers: {
-        'Authorization': `Bearer ${authToken}`,
-        // Let axios set the content-type automatically
-      },
-      timeout: TIMEOUT,
-      // Add these options to ensure proper handling of FormData
-      maxBodyLength: Infinity,
-      maxContentLength: Infinity
-    });
+    const response = await axios.post(
+      `${HEROKU_URL}/api/documents/upload`,
+      formData,
+      {
+        headers: {
+          // IMPORTANT: Do NOT set Content-Type header when using FormData
+          // Let axios set it automatically with the correct boundary
+          "Authorization": `Bearer ${authToken}`
+        },
+        timeout: TIMEOUT
+      }
+    );
     
-    console.log('=== UPLOAD SUCCESS ===');
-    console.log('Response status:', response.status);
-    console.log('Response data:', response.data);
+    console.log('Upload successful, response:', response.data);
     return response;
   } catch (error) {
-    console.log('=== UPLOAD ERROR ===');
-    console.error("Error message:", error.message);
-    
+    console.error("Upload error:", error.response?.data || error.message);
     if (error.response) {
       console.error('Status:', error.response.status);
-      console.error('Status text:', error.response.statusText);
-      console.error('Response data:', error.response.data);
-      console.error('Response headers:', error.response.headers);
-      
-      // If we get a 404, try an alternative URL format
-      if (error.response.status === 404) {
-        try {
-          console.log('Trying direct URL without string concatenation...');
-          const altUrl = 'https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/documents/upload';
-          console.log('Alternative URL:', altUrl);
-          
-          const altResponse = await axios({
-            method: 'post',
-            url: altUrl,
-            data: formData,
-            headers: {
-              'Authorization': `Bearer ${authToken}`
-            },
-            timeout: TIMEOUT
-          });
-          
-          console.log('=== ALTERNATIVE UPLOAD SUCCESS ===');
-          console.log('Response status:', altResponse.status);
-          console.log('Response data:', altResponse.data);
-          return altResponse;
-        } catch (altError) {
-          console.error('Alternative URL also failed:', altError.message);
-          throw altError;
-        }
-      }
-    } else if (error.request) {
-      // The request was made but no response was received
-      console.error('No response received from server');
-      console.error('Request details:', error.request);
-    } else {
-      // Something happened in setting up the request
-      console.error('Error setting up request:', error.message);
     }
-    
     throw error;
   }
 };
+
 /**
  * Starts document analysis
  * @param {string} documentId - Document ID to analyze
@@ -186,42 +132,21 @@ export const uploadDocument = async (file, authToken) => {
  * @returns {Promise} - Promise with response
  */
 export const analyzeDocument = async (documentId, authToken) => {
-  try {
-    // Use the exact endpoint path that matches the backend routes
-    const analyzeUrl = HEROKU_URL + `/api/documents/${documentId}/analyze`;
-    console.log('=== ANALYZE DOCUMENT ===');
-    console.log('Document ID:', documentId);
-    console.log('Auth token present:', !!authToken);
-    console.log('Analyze URL:', analyzeUrl);
-    
-    const response = await axios({
-      method: 'post',
-      url: analyzeUrl,
-      data: {},
+  const url = `${HEROKU_URL}/api/documents/${documentId}/analyze`;
+  
+  return await axios.post(
+    url,
+    {},
+    {
       headers: {
         'Authorization': `Bearer ${authToken}`,
         'Content-Type': 'application/json'
       },
       timeout: TIMEOUT
-    });
-    
-    console.log('=== ANALYZE SUCCESS ===');
-    console.log('Response status:', response.status);
-    console.log('Response data:', response.data);
-    return response;
-  } catch (error) {
-    console.log('=== ANALYZE ERROR ===');
-    console.error("Error message:", error.message);
-    
-    if (error.response) {
-      console.error('Status:', error.response.status);
-      console.error('Status text:', error.response.statusText);
-      console.error('Response data:', error.response.data);
     }
-    
-    throw error;
-  }
+  );
 };
+
 /**
  * Gets appropriate error message based on error response
  * @param {Error} error - Error object from axios
