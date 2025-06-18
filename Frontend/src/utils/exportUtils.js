@@ -20,7 +20,7 @@ export const generateExportContent = async (documentId, options) => {
     }
 
     const response = await axios.post(
-      `${HEROKU_URL}/api/export/${documentId}/generate`,
+      `https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/export/${documentId}/generate`,
       {
         outputType: options.outputType,
         primaryStakeholder: options.primaryStakeholder,

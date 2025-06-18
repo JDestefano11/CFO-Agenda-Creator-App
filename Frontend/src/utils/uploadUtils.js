@@ -100,14 +100,13 @@ export const uploadDocument = async (file, authToken) => {
   try {
     console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
     
-    // Make the POST request to the upload endpoint
+    // Use the exact URL that works in Postman
     const response = await axios.post(
-      `${HEROKU_URL}/api/documents/upload`,
+      "https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/documents/upload",
       formData,
       {
         headers: {
           // IMPORTANT: Do NOT set Content-Type header when using FormData
-          // Let axios set it automatically with the correct boundary
           "Authorization": `Bearer ${authToken}`
         },
         timeout: TIMEOUT
@@ -132,10 +131,9 @@ export const uploadDocument = async (file, authToken) => {
  * @returns {Promise} - Promise with response
  */
 export const analyzeDocument = async (documentId, authToken) => {
-  const url = `${HEROKU_URL}/api/documents/${documentId}/analyze`;
-  
+  // Use the exact URL format that works in Postman
   return await axios.post(
-    url,
+    `https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/documents/${documentId}/analyze`,
     {},
     {
       headers: {
