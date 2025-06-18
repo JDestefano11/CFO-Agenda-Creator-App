@@ -1,20 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
-  FaBold, FaItalic, FaUnderline, FaStrikethrough, 
-  FaAlignLeft, FaAlignCenter, FaAlignRight, FaAlignJustify,
-  FaListUl, FaListOl, FaIndent, FaOutdent,
-  FaLink, FaImage, FaTable, FaUndo, FaRedo,
-  FaHighlighter, FaEnvelope, FaFileAlt, FaClipboardList,
-  FaSave, FaFileExport
+  FaBold, FaItalic, FaUnderline, 
+  FaAlignLeft, FaAlignCenter, FaAlignRight, 
+  FaUndo, FaRedo,
+  FaFileExport, FaClipboardList
 } from "react-icons/fa";
 import { 
-  MdFormatColorText, MdOutlineFormatSize
+  MdFormatSize 
 } from "react-icons/md";
+
+// Add CSS for animations
+const styles = {
+  fadeIn: {
+    animation: 'fadeIn 0.2s ease-in-out',
+  },
+};
+
+// Add keyframes for animations
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.type = 'text/css';
+  styleSheet.innerText = `
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.2s ease-in-out;
+    }
+  `;
+  document.head.appendChild(styleSheet);
+}
 
 const ExportToolbar = ({ onFormatChange, selectedFormat, onApplyTemplate, content }) => {
   const [fontFamily, setFontFamily] = useState("Calibri");
   const [fontSize, setFontSize] = useState("11");
-  const [showColorPicker, setShowColorPicker] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   
   const formatOptions = [
@@ -28,7 +48,7 @@ const ExportToolbar = ({ onFormatChange, selectedFormat, onApplyTemplate, conten
     { 
       id: "email", 
       name: "Email", 
-      icon: <FaEnvelope />,
+      icon: <FaFileExport />,
       applyFormat: () => {
         const emailTemplate = `<div>
           <div style="border-bottom: 1px solid #e0e0e0; padding-bottom: 15px; margin-bottom: 20px;">
@@ -55,7 +75,7 @@ const ExportToolbar = ({ onFormatChange, selectedFormat, onApplyTemplate, conten
     { 
       id: "memo", 
       name: "Memo", 
-      icon: <FaFileAlt />,
+      icon: <FaFileExport />,
       applyFormat: () => {
         const memoTemplate = `<div>
           <div style="text-align: center; border-bottom: 1px solid #2c5282; padding-bottom: 15px; margin-bottom: 20px;">
@@ -118,11 +138,11 @@ const ExportToolbar = ({ onFormatChange, selectedFormat, onApplyTemplate, conten
             <p style="margin: 15px 0; line-height: 1.6;">Our review indicates that while most financial controls are operating effectively, there are specific areas that require attention to ensure full compliance with regulatory requirements and internal policies.</p>
             
             <h2 style="color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; font-size: 18px; margin-top: 25px;">Key Findings</h2>
-            <ul style="padding-left: 20px; margin: 15px 0;">
+            <ol style="padding-left: 20px; margin: 15px 0;">
               <li style="margin-bottom: 10px;"><strong style="color: #2c5282;">Documentation Gaps:</strong> Current process documentation is incomplete for quarterly reconciliation procedures, particularly for intercompany transactions.</li>
               <li style="margin-bottom: 10px;"><strong style="color: #2c5282;">Approval Workflows:</strong> Several instances were identified where approval chains were bypassed or approvals were obtained after transactions were processed.</li>
               <li style="margin-bottom: 10px;"><strong style="color: #2c5282;">Monitoring Effectiveness:</strong> The current monitoring system does not provide adequate visibility into control exceptions and remediation actions.</li>
-            </ul>
+            </ol>
             
             <h2 style="color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; font-size: 18px; margin-top: 25px;">Recommendations</h2>
             <ol style="padding-left: 20px; margin: 15px 0;">
@@ -143,7 +163,6 @@ const ExportToolbar = ({ onFormatChange, selectedFormat, onApplyTemplate, conten
   // Font options
   const fontOptions = ["Arial", "Calibri", "Times New Roman", "Verdana", "Georgia", "Tahoma", "Helvetica"];
   const fontSizeOptions = ["8", "9", "10", "11", "12", "14", "16", "18", "20", "24", "28", "32", "36", "48", "72"];
-  const colorOptions = ["#000000", "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF", "#800000", "#008000", "#000080", "#808000", "#800080", "#008080", "#808080", "#C00000"];
 
   // Execute document.execCommand
   const executeCommand = (command, value = null) => {
@@ -166,12 +185,6 @@ const ExportToolbar = ({ onFormatChange, selectedFormat, onApplyTemplate, conten
   const getSizeIndex = (size) => {
     const sizes = {8: 1, 9: 2, 10: 3, 11: 3, 12: 3, 14: 4, 16: 4, 18: 5, 20: 5, 24: 6, 28: 6, 32: 7, 36: 7, 48: 7, 72: 7};
     return sizes[size] || 3;
-  };
-
-  // Handle color click
-  const handleColorClick = (color) => {
-    executeCommand("foreColor", color);
-    setShowColorPicker(false);
   };
 
   // Toolbar button component
@@ -278,25 +291,6 @@ const ExportToolbar = ({ onFormatChange, selectedFormat, onApplyTemplate, conten
               <ToolbarButton icon={<FaBold size={14} />} command="bold" />
               <ToolbarButton icon={<FaItalic size={14} />} command="italic" />
               <ToolbarButton icon={<FaUnderline size={14} />} command="underline" />
-              <div className="relative">
-                <ToolbarButton 
-                  icon={<MdFormatColorText size={16} />} 
-                  onClick={() => setShowColorPicker(!showColorPicker)} 
-                  title="Text Color"
-                />
-                {showColorPicker && (
-                  <div className="absolute top-full left-0 mt-1 p-1 bg-white shadow-lg rounded border border-gray-200 z-10 grid grid-cols-5 gap-1">
-                    {colorOptions.map(color => (
-                      <div 
-                        key={color} 
-                        className="w-4 h-4 cursor-pointer border border-gray-300" 
-                        style={{ backgroundColor: color }}
-                        onClick={() => handleColorClick(color)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
@@ -305,14 +299,6 @@ const ExportToolbar = ({ onFormatChange, selectedFormat, onApplyTemplate, conten
             <ToolbarButton icon={<FaAlignLeft size={14} />} command="justifyLeft" title="Align Left" />
             <ToolbarButton icon={<FaAlignCenter size={14} />} command="justifyCenter" title="Align Center" />
             <ToolbarButton icon={<FaAlignRight size={14} />} command="justifyRight" title="Align Right" />
-            <ToolbarButton icon={<FaListUl size={14} />} command="insertUnorderedList" title="Bullet List" />
-            <ToolbarButton icon={<FaListOl size={14} />} command="insertOrderedList" title="Numbered List" />
-          </div>
-
-          {/* Insert controls */}
-          <div className="flex items-center space-x-1 border-r border-gray-200 pr-3">
-            <ToolbarButton icon={<FaLink size={14} />} command="createLink" value="https://" title="Insert Link" />
-            <ToolbarButton icon={<FaTable size={14} />} command="insertHTML" value="<table border='1'><tr><td>Cell 1</td><td>Cell 2</td></tr></table>" title="Insert Table" />
           </div>
 
           {/* Editing controls */}
