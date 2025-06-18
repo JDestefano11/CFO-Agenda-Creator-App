@@ -232,86 +232,91 @@ const ExportToolbar = ({ onFormatChange, selectedFormat, onApplyTemplate, conten
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 shadow-sm">
-      <div className="container mx-auto px-2 py-1">
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Templates dropdown */}
-          <div className="relative mr-3">
-            <button
-              className="flex items-center px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
-              onClick={() => setShowTemplates(!showTemplates)}
-            >
-              <FaClipboardList className="mr-1" />
-              <span>Templates</span>
-            </button>
-            {showTemplates && (
-              <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-20 w-48">
-                {documentTemplates.map(template => (
-                  <button
-                    key={template.id}
-                    className="flex items-center w-full px-3 py-2 text-left hover:bg-gray-100 text-sm"
-                    onClick={() => {
-                      template.applyFormat();
-                      setShowTemplates(false);
-                    }}
-                  >
-                    <span className="mr-2 text-gray-600">{template.icon}</span>
-                    {template.name}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Font controls */}
-          <div className="flex items-center space-x-1 border-r border-gray-200 pr-3">
-            <select 
-              className="text-sm border border-gray-300 rounded px-1 py-1 w-24"
-              value={fontFamily}
-              onChange={handleFontChange}
-              title="Font Family"
-            >
-              {fontOptions.map((font) => (
-                <option key={font} value={font} style={{ fontFamily: font }}>
-                  {font}
-                </option>
-              ))}
-            </select>
-            <select 
-              className="text-sm border border-gray-300 rounded px-1 py-1 w-12"
-              value={fontSize}
-              onChange={handleFontSizeChange}
-              title="Font Size"
-            >
-              {fontSizeOptions.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-            <div className="flex">
-              <ToolbarButton icon={<FaBold size={14} />} command="bold" />
-              <ToolbarButton icon={<FaItalic size={14} />} command="italic" />
-              <ToolbarButton icon={<FaUnderline size={14} />} command="underline" />
+    <div className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
+      <div className="container mx-auto px-4 py-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center space-x-4">
+            {/* Templates dropdown */}
+            <div className="relative">
+              <button
+                className="flex items-center px-3 py-1.5 text-sm font-medium border border-indigo-200 rounded hover:bg-indigo-50 transition-colors duration-200 bg-white shadow-sm"
+                onClick={() => setShowTemplates(!showTemplates)}
+              >
+                <FaClipboardList className="mr-2 text-indigo-600" />
+                <span>Templates</span>
+              </button>
+              {showTemplates && (
+                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-20 w-56 animate-fade-in">
+                  {documentTemplates.map(template => (
+                    <button
+                      key={template.id}
+                      className="flex items-center w-full px-4 py-2.5 text-left hover:bg-indigo-50 text-sm transition-colors duration-150"
+                      onClick={() => {
+                        template.applyFormat();
+                        setShowTemplates(false);
+                      }}
+                    >
+                      <span className="mr-3 text-indigo-600">{template.icon}</span>
+                      <span className="font-medium">{template.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
 
-          {/* Paragraph controls */}
-          <div className="flex items-center space-x-1 border-r border-gray-200 pr-3">
-            <ToolbarButton icon={<FaAlignLeft size={14} />} command="justifyLeft" title="Align Left" />
-            <ToolbarButton icon={<FaAlignCenter size={14} />} command="justifyCenter" title="Align Center" />
-            <ToolbarButton icon={<FaAlignRight size={14} />} command="justifyRight" title="Align Right" />
-          </div>
+            {/* Font controls */}
+            <div className="flex items-center space-x-2 border-r border-gray-200 pr-4">
+              <select 
+                className="text-sm border border-gray-300 rounded px-2 py-1.5 w-28 focus:outline-none focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300"
+                value={fontFamily}
+                onChange={handleFontChange}
+                title="Font Family"
+              >
+                {fontOptions.map((font) => (
+                  <option key={font} value={font} style={{ fontFamily: font }}>
+                    {font}
+                  </option>
+                ))}
+              </select>
+              <select 
+                className="text-sm border border-gray-300 rounded px-2 py-1.5 w-16 focus:outline-none focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300"
+                value={fontSize}
+                onChange={handleFontSizeChange}
+                title="Font Size"
+              >
+                {fontSizeOptions.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+              <div className="flex bg-gray-50 rounded border border-gray-200 p-0.5">
+                <ToolbarButton icon={<FaBold size={14} />} command="bold" className="hover:bg-indigo-50" />
+                <ToolbarButton icon={<FaItalic size={14} />} command="italic" className="hover:bg-indigo-50" />
+                <ToolbarButton icon={<FaUnderline size={14} />} command="underline" className="hover:bg-indigo-50" />
+              </div>
+            </div>
 
-          {/* Editing controls */}
-          <div className="flex items-center space-x-1">
-            <ToolbarButton icon={<FaUndo size={14} />} command="undo" title="Undo" />
-            <ToolbarButton icon={<FaRedo size={14} />} command="redo" title="Redo" />
+            {/* Paragraph controls */}
+            <div className="flex items-center space-x-1 border-r border-gray-200 pr-4">
+              <div className="flex bg-gray-50 rounded border border-gray-200 p-0.5">
+                <ToolbarButton icon={<FaAlignLeft size={14} />} command="justifyLeft" title="Align Left" className="hover:bg-indigo-50" />
+                <ToolbarButton icon={<FaAlignCenter size={14} />} command="justifyCenter" title="Align Center" className="hover:bg-indigo-50" />
+                <ToolbarButton icon={<FaAlignRight size={14} />} command="justifyRight" title="Align Right" className="hover:bg-indigo-50" />
+              </div>
+            </div>
+
+            {/* Editing controls */}
+            <div className="flex items-center">
+              <div className="flex bg-gray-50 rounded border border-gray-200 p-0.5">
+                <ToolbarButton icon={<FaUndo size={14} />} command="undo" title="Undo" className="hover:bg-indigo-50" />
+                <ToolbarButton icon={<FaRedo size={14} />} command="redo" title="Redo" className="hover:bg-indigo-50" />
+              </div>
+            </div>
           </div>
           
           {/* Export Format */}
-          <div className="flex items-center ml-auto">
-            <div className="text-xs font-medium text-gray-500 mr-2">Export As:</div>
+          <div className="flex items-center">
             <FormatSelector />
           </div>
         </div>
