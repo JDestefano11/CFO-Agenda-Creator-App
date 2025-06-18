@@ -188,18 +188,17 @@ const ExportToolbar = ({ onFormatChange, selectedFormat, onApplyTemplate, conten
   };
 
   // Toolbar button component
-  const ToolbarButton = ({ icon, label, command, value, active, className, onClick }) => {
+  const ToolbarButton = ({ icon, command, label, className }) => {
+    const [active, setActive] = useState(false);
+
     const handleClick = () => {
-      if (onClick) {
-        onClick();
-      } else if (command) {
-        executeCommand(command, value);
-      }
+      document.execCommand(command);
+      setActive(!active);
     };
 
     return (
       <button 
-        className={`p-1 rounded hover:bg-gray-100 ${active ? 'bg-gray-200' : ''} ${className || ''}`}
+        className={`p-0.5 rounded hover:bg-gray-100 ${active ? 'bg-gray-200' : ''} ${className || ''}`}
         onClick={handleClick}
         title={label || command}
       >
@@ -212,111 +211,130 @@ const ExportToolbar = ({ onFormatChange, selectedFormat, onApplyTemplate, conten
   const FormatSelector = () => {
     return (
       <div className="flex items-center">
-        <span className="text-sm text-gray-600 mr-2">Export as:</span>
-        {formatOptions.map((format) => (
-          <button
-            key={format.value}
-            className={`px-3 py-1 text-sm rounded mr-1 transition-all duration-200 ${
-              selectedFormat === format.value
-                ? "bg-indigo-600 text-white shadow-sm"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm"
-            }`}
-            onClick={() => onFormatChange(format.value)}
-            title={`Export as ${format.label} file`}
-          >
-            {format.label}
-          </button>
-        ))}
+        <span className="text-xs font-medium text-gray-600 mr-2">Export as:</span>
+        <div className="flex bg-gray-50 rounded border border-gray-200 shadow-sm">
+          {formatOptions.map((format) => (
+            <button
+              key={format.value}
+              className={`px-2 py-1 text-xs rounded transition-all duration-200 font-medium ${
+                selectedFormat === format.value
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "bg-white text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
+              }`}
+              onClick={() => onFormatChange(format.value)}
+              title={`Export as ${format.label} file`}
+            >
+              {format.label}
+            </button>
+          ))}
+        </div>
       </div>
     );
   };
 
   return (
     <div className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
-      <div className="container mx-auto px-4 py-2">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center space-x-4">
+      <div className="container mx-auto px-3 py-2">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-end flex-wrap gap-4">
             {/* Templates dropdown */}
-            <div className="relative">
+            <div>
+              <label className="text-xs text-gray-500 mb-0.5 font-medium block">Template</label>
               <button
-                className="flex items-center px-3 py-1.5 text-sm font-medium border border-indigo-200 rounded hover:bg-indigo-50 transition-colors duration-200 bg-white shadow-sm"
+                className="flex items-center px-2 py-1 text-xs font-medium border border-gray-300 rounded hover:bg-indigo-50 transition-all duration-200 bg-white shadow-sm h-7"
                 onClick={() => setShowTemplates(!showTemplates)}
               >
-                <FaClipboardList className="mr-2 text-indigo-600" />
+                <FaClipboardList className="mr-1 text-indigo-600" size={12} />
                 <span>Templates</span>
               </button>
               {showTemplates && (
-                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-20 w-56 animate-fade-in">
-                  {documentTemplates.map(template => (
-                    <button
-                      key={template.id}
-                      className="flex items-center w-full px-4 py-2.5 text-left hover:bg-indigo-50 text-sm transition-colors duration-150"
-                      onClick={() => {
-                        template.applyFormat();
-                        setShowTemplates(false);
-                      }}
-                    >
-                      <span className="mr-3 text-indigo-600">{template.icon}</span>
-                      <span className="font-medium">{template.name}</span>
-                    </button>
-                  ))}
+                <div className="absolute mt-1 bg-white border border-gray-200 rounded shadow-md z-20 w-48 overflow-hidden">
+                  <div className="py-0.5">
+                    {documentTemplates.map(template => (
+                      <button
+                        key={template.id}
+                        className="flex items-center w-full px-2 py-1.5 text-left hover:bg-indigo-50 text-xs transition-colors duration-150 border-b border-gray-100 last:border-b-0"
+                        onClick={() => {
+                          template.applyFormat();
+                          setShowTemplates(false);
+                        }}
+                      >
+                        <span className="mr-2 text-indigo-600">{template.icon}</span>
+                        <span className="font-medium">{template.name}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Font controls */}
-            <div className="flex items-center space-x-2 border-r border-gray-200 pr-4">
-              <select 
-                className="text-sm border border-gray-300 rounded px-2 py-1.5 w-28 focus:outline-none focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300"
-                value={fontFamily}
-                onChange={handleFontChange}
-                title="Font Family"
-              >
-                {fontOptions.map((font) => (
-                  <option key={font} value={font} style={{ fontFamily: font }}>
-                    {font}
-                  </option>
-                ))}
-              </select>
-              <select 
-                className="text-sm border border-gray-300 rounded px-2 py-1.5 w-16 focus:outline-none focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300"
-                value={fontSize}
-                onChange={handleFontSizeChange}
-                title="Font Size"
-              >
-                {fontSizeOptions.map((size) => (
-                  <option key={size} value={size}>
-                    {size}
-                  </option>
-                ))}
-              </select>
-              <div className="flex bg-gray-50 rounded border border-gray-200 p-0.5">
-                <ToolbarButton icon={<FaBold size={14} />} command="bold" className="hover:bg-indigo-50" />
-                <ToolbarButton icon={<FaItalic size={14} />} command="italic" className="hover:bg-indigo-50" />
-                <ToolbarButton icon={<FaUnderline size={14} />} command="underline" className="hover:bg-indigo-50" />
+            {/* Font controls group */}
+            <div className="flex items-end gap-3 border-r border-gray-200 pr-4 ml-2">
+              <div>
+                <label className="text-xs text-gray-500 mb-0.5 font-medium block">Font</label>
+                <select 
+                  className="text-xs border border-gray-300 rounded px-1 py-1 w-24 focus:outline-none focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300 bg-white shadow-sm h-7"
+                  value={fontFamily}
+                  onChange={handleFontChange}
+                  title="Font Family"
+                >
+                  {fontOptions.map((font) => (
+                    <option key={font} value={font} style={{ fontFamily: font }}>
+                      {font}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="text-xs text-gray-500 mb-0.5 font-medium block">Size</label>
+                <select 
+                  className="text-xs border border-gray-300 rounded px-1 py-1 w-12 focus:outline-none focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300 bg-white shadow-sm h-7"
+                  value={fontSize}
+                  onChange={handleFontSizeChange}
+                  title="Font Size"
+                >
+                  {fontSizeOptions.map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="text-xs text-gray-500 mb-0.5 font-medium block">Style</label>
+                <div className="flex bg-white rounded border border-gray-300 shadow-sm h-7">
+                  <ToolbarButton icon={<FaBold size={12} />} command="bold" className="hover:bg-indigo-50 px-2" />
+                  <ToolbarButton icon={<FaItalic size={12} />} command="italic" className="hover:bg-indigo-50 px-2 border-l border-r border-gray-300" />
+                  <ToolbarButton icon={<FaUnderline size={12} />} command="underline" className="hover:bg-indigo-50 px-2" />
+                </div>
               </div>
             </div>
 
             {/* Paragraph controls */}
-            <div className="flex items-center space-x-1 border-r border-gray-200 pr-4">
-              <div className="flex bg-gray-50 rounded border border-gray-200 p-0.5">
-                <ToolbarButton icon={<FaAlignLeft size={14} />} command="justifyLeft" title="Align Left" className="hover:bg-indigo-50" />
-                <ToolbarButton icon={<FaAlignCenter size={14} />} command="justifyCenter" title="Align Center" className="hover:bg-indigo-50" />
-                <ToolbarButton icon={<FaAlignRight size={14} />} command="justifyRight" title="Align Right" className="hover:bg-indigo-50" />
+            <div className="border-r border-gray-200 pr-4 ml-2">
+              <label className="text-xs text-gray-500 mb-0.5 font-medium block">Align</label>
+              <div className="flex bg-white rounded border border-gray-300 shadow-sm h-7">
+                <ToolbarButton icon={<FaAlignLeft size={12} />} command="justifyLeft" title="Align Left" className="hover:bg-indigo-50 px-2" />
+                <ToolbarButton icon={<FaAlignCenter size={12} />} command="justifyCenter" title="Align Center" className="hover:bg-indigo-50 px-2 border-l border-r border-gray-300" />
+                <ToolbarButton icon={<FaAlignRight size={12} />} command="justifyRight" title="Align Right" className="hover:bg-indigo-50 px-2" />
               </div>
             </div>
 
             {/* Editing controls */}
-            <div className="flex items-center">
-              <div className="flex bg-gray-50 rounded border border-gray-200 p-0.5">
-                <ToolbarButton icon={<FaUndo size={14} />} command="undo" title="Undo" className="hover:bg-indigo-50" />
-                <ToolbarButton icon={<FaRedo size={14} />} command="redo" title="Redo" className="hover:bg-indigo-50" />
+            <div className="ml-2">
+              <label className="text-xs text-gray-500 mb-0.5 font-medium block">Actions</label>
+              <div className="flex bg-white rounded border border-gray-300 shadow-sm h-7">
+                <ToolbarButton icon={<FaUndo size={12} />} command="undo" title="Undo" className="hover:bg-indigo-50 px-2" />
+                <ToolbarButton icon={<FaRedo size={12} />} command="redo" title="Redo" className="hover:bg-indigo-50 px-2 border-l border-gray-300" />
               </div>
             </div>
           </div>
           
           {/* Export Format */}
-          <div className="flex items-center">
+          <div>
+            <label className="text-xs text-gray-500 mb-0.5 font-medium block invisible">Export</label>
             <FormatSelector />
           </div>
         </div>
