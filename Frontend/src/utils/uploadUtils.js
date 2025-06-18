@@ -107,7 +107,7 @@ export const uploadDocument = async (file, authToken) => {
       formData,
       {
         headers: {
-          "Content-Type": "multipart/form-data",
+         'Content-Type': 'application/json',
           "Authorization": `Bearer ${authToken}`
         }
       }
