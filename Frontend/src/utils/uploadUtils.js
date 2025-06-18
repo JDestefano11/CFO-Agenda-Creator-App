@@ -79,17 +79,9 @@ export const extractDocumentId = (response) => {
   return null;
 };
 
-/**
- * API configuration
- */
-export const API_CONFIG = {
-  BASE_URL: 'https://cfo-agenda-creator-21d886a774e1.herokuapp.com',
-  ENDPOINTS: {
-    UPLOAD: '/api/documents/upload',
-    ANALYZE: '/api/documents/{documentId}/analyze'
-  },
-  TIMEOUT: 30000 // 30 second timeout
-};
+// Direct Heroku endpoint URL
+const HEROKU_URL = 'https://cfo-agenda-creator-21d886a774e1.herokuapp.com';
+const TIMEOUT = 30000; // 30 second timeout
 
 /**
  * Uploads a document to the server
@@ -109,7 +101,7 @@ export const uploadDocument = async (file, authToken) => {
     
     // Make the POST request to the upload endpoint
     const response = await axios.post(
-      "https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/documents/upload",
+      `${HEROKU_URL}/api/documents/upload`,
       formData,
       {
         headers: {
@@ -117,7 +109,7 @@ export const uploadDocument = async (file, authToken) => {
           // Let axios set it automatically with the correct boundary
           "Authorization": `Bearer ${authToken}`
         },
-        timeout: 30000 // 30 second timeout
+        timeout: TIMEOUT
       }
     );
     
@@ -138,7 +130,7 @@ export const uploadDocument = async (file, authToken) => {
  * @returns {Promise} - Promise with response
  */
 export const analyzeDocument = async (documentId, authToken) => {
-  const url = `https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/documents/${documentId}/analyze`;
+  const url = `${HEROKU_URL}/api/documents/${documentId}/analyze`;
   
   return await axios.post(
     url,
@@ -148,7 +140,7 @@ export const analyzeDocument = async (documentId, authToken) => {
         'Authorization': `Bearer ${authToken}`,
         'Content-Type': 'application/json'
       },
-      timeout: 30000 // 30 second timeout
+      timeout: TIMEOUT
     }
   );
 };

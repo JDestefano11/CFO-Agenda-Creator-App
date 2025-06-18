@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api';
+// Direct Heroku URL
+const HEROKU_URL = 'https://cfo-agenda-creator-21d886a774e1.herokuapp.com';
 
 /**
  * Generate export content for a document
@@ -19,7 +20,7 @@ export const generateExportContent = async (documentId, options) => {
     }
 
     const response = await axios.post(
-      `${API_BASE_URL}/export/${documentId}/generate`,
+      `${HEROKU_URL}/api/export/${documentId}/generate`,
       {
         outputType: options.outputType,
         primaryStakeholder: options.primaryStakeholder,
@@ -68,7 +69,7 @@ export const updateExportContent = async (documentId, modifiedContent) => {
     }
 
     const response = await axios.put(
-      `${API_BASE_URL}/export/${documentId}/update`,
+      `${HEROKU_URL}/api/export/${documentId}/update`,
       { modifiedContent },
       {
         headers: { Authorization: `Bearer ${token}` }
@@ -113,7 +114,7 @@ export const finalizeExportContent = async (documentId, modifiedContent) => {
     }
 
     const response = await axios.post(
-      `${API_BASE_URL}/export/${documentId}/finalize`,
+      `${HEROKU_URL}/api/export/${documentId}/finalize`,
       { modifiedContent },
       {
         headers: { Authorization: `Bearer ${token}` }
@@ -157,7 +158,7 @@ export const getExportContent = async (documentId) => {
     }
 
     const response = await axios.get(
-      `${API_BASE_URL}/export/${documentId}`,
+      `${HEROKU_URL}/api/export/${documentId}`,
       {
         headers: { Authorization: `Bearer ${token}` }
       }
