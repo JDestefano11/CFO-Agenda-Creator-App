@@ -98,23 +98,36 @@ export const API_CONFIG = {
  * @returns {Promise} - Promise with response
  */
 export const uploadDocument = async (file, authToken) => {
+  // Create a FormData object to handle the file upload
   const formData = new FormData();
+  
+  // The backend expects the file with the field name 'document'
   formData.append("document", file);
 
   try {
+    console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
+    
+    // Make the POST request to the upload endpoint
     const response = await axios.post(
       "https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/documents/upload",
       formData,
       {
         headers: {
-         'Content-Type': 'application/json',
+          // IMPORTANT: Do NOT set Content-Type header when using FormData
+          // Let axios set it automatically with the correct boundary
           "Authorization": `Bearer ${authToken}`
-        }
+        },
+        timeout: 30000 // 30 second timeout
       }
     );
+    
+    console.log('Upload successful, response:', response.data);
     return response;
   } catch (error) {
     console.error("Upload error:", error.response?.data || error.message);
+    if (error.response) {
+      console.error('Status:', error.response.status);
+    }
     throw error;
   }
 };
