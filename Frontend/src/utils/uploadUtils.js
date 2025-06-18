@@ -95,7 +95,8 @@ export const uploadDocument = async (file, authToken) => {
   const formData = new FormData();
   
   // The backend expects the file with the field name 'document'
-  formData.append("document", file);
+  // Make sure to append the file with the correct MIME type
+  formData.append("document", file, file.name);
 
   try {
     console.log('===== UPLOAD DEBUG =====');
@@ -105,7 +106,7 @@ export const uploadDocument = async (file, authToken) => {
     
     // Log the FormData contents (as much as possible)
     for (let [key, value] of formData.entries()) {
-      console.log('FormData entry:', key, value instanceof File ? `[File: ${value.name}]` : value);
+      console.log('FormData entry:', key, value instanceof File ? `[File: ${value.name}, Type: ${value.type}]` : value);
     }
     
     // Use the exact URL that works in Postman
@@ -115,9 +116,13 @@ export const uploadDocument = async (file, authToken) => {
     const config = {
       headers: {
         // IMPORTANT: Do NOT set Content-Type header when using FormData
+        // Let the browser set the boundary parameter automatically
         "Authorization": `Bearer ${authToken}`
       },
-      timeout: TIMEOUT
+      // Increase timeout for larger files
+      timeout: 60000,
+      // Prevent axios from trying to transform the FormData
+      transformRequest: [(data) => data]
     };
     console.log('Request config:', JSON.stringify(config));
     
