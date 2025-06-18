@@ -212,15 +212,17 @@ const ExportToolbar = ({ onFormatChange, selectedFormat, onApplyTemplate, conten
   const FormatSelector = () => {
     return (
       <div className="flex items-center">
+        <span className="text-sm text-gray-600 mr-2">Export as:</span>
         {formatOptions.map((format) => (
           <button
             key={format.value}
-            className={`px-2 py-1 text-xs rounded mr-1 ${
+            className={`px-3 py-1 text-sm rounded mr-1 transition-all duration-200 ${
               selectedFormat === format.value
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? "bg-indigo-600 text-white shadow-sm"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm"
             }`}
             onClick={() => onFormatChange(format.value)}
+            title={`Export as ${format.label} file`}
           >
             {format.label}
           </button>

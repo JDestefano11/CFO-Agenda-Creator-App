@@ -146,8 +146,7 @@ const Export = () => {
         // Get the finalized content from the response
         const finalContent = result.data.export.finalContent;
         
-        // In a production app, this would trigger a download based on the format
-        // For demonstration purposes, we'll create a download link
+        // Create a download link
         const element = document.createElement('a');
         
         // Create appropriate content based on format
@@ -157,27 +156,56 @@ const Export = () => {
         
         switch(exportFormat) {
           case 'pdf':
-            // In a real app, we would convert HTML to PDF
-            // For now, we'll just use the HTML content
-            fileContent = `<html><body>${finalContent}</body></html>`;
-            mimeType = 'application/pdf';
-            fileExtension = 'pdf';
+            // For PDF, we'll create a styled HTML document that browsers can save as PDF
+            fileContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>${documentTitle}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+    h1, h2, h3 { color: #2c5282; }
+    .header { border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 20px; }
+    .footer { border-top: 1px solid #e2e8f0; padding-top: 20px; margin-top: 40px; font-size: 12px; color: #718096; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>${documentTitle}</h1>
+    <p>Generated on ${new Date().toLocaleDateString()}</p>
+  </div>
+  ${finalContent}
+  <div class="footer">
+    <p>Generated using CFO Agenda Creator</p>
+  </div>
+</body>
+</html>`;
+            mimeType = 'text/html';
+            fileExtension = 'html';
             break;
           case 'docx':
-            // In a real app, we would convert to DOCX format
-            fileContent = finalContent;
-            mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-            fileExtension = 'docx';
-            break;
-          case 'xlsx':
-            // In a real app, we would convert to XLSX format
-            fileContent = finalContent;
-            mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-            fileExtension = 'xlsx';
+            // For Word documents, we'll create an HTML file that Word can open
+            fileContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>${documentTitle}</title>
+  <style>
+    body { font-family: 'Calibri', sans-serif; margin: 1in; }
+    h1, h2, h3 { font-family: 'Calibri Light', sans-serif; }
+  </style>
+</head>
+<body>
+  <h1>${documentTitle}</h1>
+  ${finalContent}
+</body>
+</html>`;
+            mimeType = 'application/vnd.ms-word';
+            fileExtension = 'doc';
             break;
           default:
-            // Plain text
-            fileContent = finalContent.replace(/<[^>]*>/g, '');
+            // Plain text - strip HTML tags
+            fileContent = finalContent.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
             mimeType = 'text/plain';
             fileExtension = 'txt';
         }
@@ -186,20 +214,44 @@ const Export = () => {
         const blob = new Blob([fileContent], { type: mimeType });
         element.href = URL.createObjectURL(blob);
         
-        // Set the file name
-        const fileName = `${documentTitle.replace(/\s+/g, '_')}_export.${fileExtension}`;
+        // Set the file name with timestamp to avoid duplicates
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+        const fileName = `${documentTitle.replace(/\s+/g, '_')}_${timestamp}.${fileExtension}`;
         element.download = fileName;
         
         // Trigger the download
         document.body.appendChild(element);
         element.click();
-        document.body.removeChild(element);
         
-        // Show success message
-        alert(`Document successfully exported as ${exportFormat.toUpperCase()}`);
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(element);
+          URL.revokeObjectURL(element.href);
+        }, 100);
         
-        // Navigate back to home or results
-        navigate("/");
+        // Show success message with the file name
+        const successMessage = document.createElement('div');
+        successMessage.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg z-50';
+        successMessage.innerHTML = `
+          <div class="flex items-center">
+            <div class="py-1"><svg class="fill-current h-6 w-6 text-green-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM6.7 9.29L9 11.6l4.3-4.3 1.4 1.42L9 14.4l-3.7-3.7 1.4-1.42z"/></svg></div>
+            <div>
+              <p class="font-bold">Success!</p>
+              <p class="text-sm">Document exported as ${fileName}</p>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(successMessage);
+        
+        // Remove the success message after 5 seconds
+        setTimeout(() => {
+          if (document.body.contains(successMessage)) {
+            document.body.removeChild(successMessage);
+          }
+        }, 5000);
+        
+        // Don't navigate away - let the user stay on the export page
+        setIsExporting(false);
       } else {
         if (result.authError) {
           navigate("/login");

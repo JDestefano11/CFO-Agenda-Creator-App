@@ -352,6 +352,7 @@ export const ResultsProvider = ({ children }) => {
     getTopicsData,
     navigate,
     location,
+    handleShowConfirmationModal: () => setIsConfirmModalOpen(true),
     // Add back the original function names for backward compatibility
     handleSaveEdit,
     handleCancelEdit,
