@@ -98,28 +98,56 @@ export const uploadDocument = async (file, authToken) => {
   formData.append("document", file);
 
   try {
-    console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
+    console.log('===== UPLOAD DEBUG =====');
+    console.log('File details:', { name: file.name, size: file.size, type: file.type });
+    console.log('Auth token present:', !!authToken);
+    console.log('Auth token first 10 chars:', authToken ? authToken.substring(0, 10) + '...' : 'none');
+    
+    // Log the FormData contents (as much as possible)
+    for (let [key, value] of formData.entries()) {
+      console.log('FormData entry:', key, value instanceof File ? `[File: ${value.name}]` : value);
+    }
     
     // Use the exact URL that works in Postman
-    const response = await axios.post(
-      "https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/documents/upload",
-      formData,
-      {
-        headers: {
-          // IMPORTANT: Do NOT set Content-Type header when using FormData
-          "Authorization": `Bearer ${authToken}`
-        },
-        timeout: TIMEOUT
-      }
-    );
+    const url = "https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/documents/upload";
+    console.log('Upload URL:', url);
     
-    console.log('Upload successful, response:', response.data);
+    const config = {
+      headers: {
+        // IMPORTANT: Do NOT set Content-Type header when using FormData
+        "Authorization": `Bearer ${authToken}`
+      },
+      timeout: TIMEOUT
+    };
+    console.log('Request config:', JSON.stringify(config));
+    
+    console.log('Sending request...');
+    const response = await axios.post(url, formData, config);
+    
+    console.log('===== UPLOAD SUCCESS =====');
+    console.log('Response status:', response.status);
+    console.log('Response data:', response.data);
     return response;
   } catch (error) {
-    console.error("Upload error:", error.response?.data || error.message);
+    console.log('===== UPLOAD ERROR =====');
+    console.error('Error type:', error.name);
+    console.error('Error message:', error.message);
+    
     if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
       console.error('Status:', error.response.status);
+      console.error('Status text:', error.response.statusText);
+      console.error('Response data:', error.response.data);
+      console.error('Response headers:', JSON.stringify(error.response.headers));
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('No response received. Request details:', error.request);
+    } else {
+      // Something happened in setting up the request
+      console.error('Error setting up request:', error.message);
     }
+    
     throw error;
   }
 };
@@ -131,18 +159,50 @@ export const uploadDocument = async (file, authToken) => {
  * @returns {Promise} - Promise with response
  */
 export const analyzeDocument = async (documentId, authToken) => {
-  // Use the exact URL format that works in Postman
-  return await axios.post(
-    `https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/documents/${documentId}/analyze`,
-    {},
-    {
+  try {
+    console.log('===== ANALYZE DEBUG =====');
+    console.log('Document ID:', documentId);
+    console.log('Auth token present:', !!authToken);
+    console.log('Auth token first 10 chars:', authToken ? authToken.substring(0, 10) + '...' : 'none');
+    
+    // Use the exact URL format that works in Postman
+    const url = `https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/documents/${documentId}/analyze`;
+    console.log('Analyze URL:', url);
+    
+    const config = {
       headers: {
         'Authorization': `Bearer ${authToken}`,
         'Content-Type': 'application/json'
       },
       timeout: TIMEOUT
+    };
+    console.log('Request config:', JSON.stringify(config));
+    
+    console.log('Sending analyze request...');
+    const response = await axios.post(url, {}, config);
+    
+    console.log('===== ANALYZE SUCCESS =====');
+    console.log('Response status:', response.status);
+    console.log('Response data:', response.data);
+    return response;
+  } catch (error) {
+    console.log('===== ANALYZE ERROR =====');
+    console.error('Error type:', error.name);
+    console.error('Error message:', error.message);
+    
+    if (error.response) {
+      console.error('Status:', error.response.status);
+      console.error('Status text:', error.response.statusText);
+      console.error('Response data:', error.response.data);
+      console.error('Response headers:', JSON.stringify(error.response.headers));
+    } else if (error.request) {
+      console.error('No response received. Request details:', error.request);
+    } else {
+      console.error('Error setting up request:', error.message);
     }
-  );
+    
+    throw error;
+  }
 };
 
 /**
