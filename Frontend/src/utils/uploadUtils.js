@@ -122,21 +122,20 @@ export const uploadDocument = async (file, authToken) => {
  * @returns {Promise} - Promise with response
  */
 export const analyzeDocument = async (documentId, authToken) => {
-  const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ANALYZE.replace('{documentId}', documentId)}`;
+  const url = `https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/documents/${documentId}/analyze`;
   
   return await axios.post(
     url,
     {},
     {
       headers: {
-        Authorization: `Bearer ${authToken}`,
-        "Content-Type": "application/json",
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
       },
-      timeout: API_CONFIG.TIMEOUT
+      timeout: 30000 // 30 second timeout
     }
   );
 };
-
 /**
  * Gets appropriate error message based on error response
  * @param {Error} error - Error object from axios
