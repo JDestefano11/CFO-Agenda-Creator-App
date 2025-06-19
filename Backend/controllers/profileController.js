@@ -32,6 +32,8 @@ export const getProfile = async (req, res) => {
         email: user.email,
         profileImage: user.profileImage,
         role: user.role,
+        company: user.companyName,
+        position: user.jobTitle,
         createdAt: user.createdAt
       },
       documents

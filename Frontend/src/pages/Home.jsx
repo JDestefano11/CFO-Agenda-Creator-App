@@ -1,7 +1,16 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 const Home = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  useEffect(() => {
+    // Check if user is logged in by looking for token in localStorage
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
   return (
     <div className="pt-20 min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <div className="container mx-auto px-4 py-16">
@@ -15,22 +24,34 @@ const Home = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 mb-16">
-            <Link
-              to="/signup"
-              className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-medium rounded-lg shadow-lg relative overflow-hidden group"
-            >
-              <span className="absolute inset-0 w-0 bg-gradient-to-r from-indigo-700 to-purple-700 transition-all duration-500 ease-out group-hover:w-full"></span>
-              <span className="relative z-10">Get Started</span>
-            </Link>
-            <Link
-              to="/login"
-              className="px-8 py-3 bg-white text-indigo-700 font-medium rounded-lg shadow-lg border border-indigo-200 relative overflow-hidden group"
-            >
-              <span className="absolute inset-0 w-0 bg-gradient-to-r from-indigo-50 to-purple-100 transition-all duration-500 ease-out group-hover:w-full"></span>
-              <span className="relative z-10 transition-colors duration-300 group-hover:text-purple-800">
-                Sign In
-              </span>
-            </Link>
+            {!isLoggedIn ? (
+              <>
+                <Link
+                  to="/signup"
+                  className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-medium rounded-lg shadow-lg relative overflow-hidden group"
+                >
+                  <span className="absolute inset-0 w-0 bg-gradient-to-r from-indigo-700 to-purple-700 transition-all duration-500 ease-out group-hover:w-full"></span>
+                  <span className="relative z-10">Get Started</span>
+                </Link>
+                <Link
+                  to="/login"
+                  className="px-8 py-3 bg-white text-indigo-700 font-medium rounded-lg shadow-lg border border-indigo-200 relative overflow-hidden group"
+                >
+                  <span className="absolute inset-0 w-0 bg-gradient-to-r from-indigo-50 to-purple-100 transition-all duration-500 ease-out group-hover:w-full"></span>
+                  <span className="relative z-10 transition-colors duration-300 group-hover:text-purple-800">
+                    Sign In
+                  </span>
+                </Link>
+              </>
+            ) : (
+              <Link
+                to="/upload"
+                className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-medium rounded-lg shadow-lg relative overflow-hidden group"
+              >
+                <span className="absolute inset-0 w-0 bg-gradient-to-r from-indigo-700 to-purple-700 transition-all duration-500 ease-out group-hover:w-full"></span>
+                <span className="relative z-10">Upload Document</span>
+              </Link>
+            )}
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 mt-12 mb-16">

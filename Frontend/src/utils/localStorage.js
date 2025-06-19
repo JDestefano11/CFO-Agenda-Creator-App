@@ -2,16 +2,18 @@
  * Utility functions for working with localStorage
  */
 
-// Save token to localStorage
+import { saveTokenWithExpiration, getToken as getTokenWithExpiry } from './authUtils';
+
+// Save token to localStorage with expiration
 export const saveToken = (token) => {
     if (token) {
-        localStorage.setItem('token', token);
+        saveTokenWithExpiration(token);
     }
 };
 
-// Get token from localStorage
+// Get token from localStorage (with expiry check)
 export const getToken = () => {
-    return localStorage.getItem('token');
+    return getTokenWithExpiry();
 };
 
 // Remove token from localStorage
@@ -41,6 +43,7 @@ export const removeUser = () => {
 export const clearAuthData = () => {
     removeToken();
     removeUser();
+    localStorage.removeItem('tokenData'); // Remove token expiration data
 };
 
 // Check if user is authenticated

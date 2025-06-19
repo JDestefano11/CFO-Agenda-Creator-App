@@ -71,7 +71,7 @@ const Navbar = () => {
     localStorage.removeItem("user");
     setUser(null);
     setDropdownOpen(false);
-    navigate("/auth?mode=login");
+    navigate("/");
   };
 
   // Get user initials for avatar fallback
