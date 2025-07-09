@@ -14,15 +14,11 @@ import { isTokenExpired, clearAuthData, refreshTokenExpiration } from "./utils/a
 const App = () => {
   const navigate = useNavigate();
   
-  // Check token expiration on app load
+  // Check token expiration on app load - no redirects
   useEffect(() => {
     if (isTokenExpired()) {
       clearAuthData();
-      // Don't redirect if already on public pages
-      const publicPaths = ['/', '/login', '/signup'];
-      if (!publicPaths.includes(window.location.pathname)) {
-        navigate('/');
-      }
+      // We don't redirect anywhere - always stay where the user is
     }
   }, [navigate]);
   
@@ -39,15 +35,11 @@ const App = () => {
       window.addEventListener(event, handleUserActivity);
     });
     
-    // Set up periodic check for token expiration (every minute)
+    // Set up periodic check for token expiration (every minute) - no redirects
     const tokenCheckInterval = setInterval(() => {
       if (isTokenExpired()) {
         clearAuthData();
-        // Only redirect if on a protected page
-        const publicPaths = ['/', '/login', '/signup'];
-        if (!publicPaths.includes(window.location.pathname)) {
-          navigate('/');
-        }
+        // We no longer redirect the user regardless of which page they're on
       }
     }, 60000); // Check every minute
     
@@ -94,8 +86,8 @@ const App = () => {
             </>
           }
         />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Navigate to="/" />} />
+        <Route path="/signup" element={<Navigate to="/" />} />
         
 
         <Route

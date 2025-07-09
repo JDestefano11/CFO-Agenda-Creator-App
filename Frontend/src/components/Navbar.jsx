@@ -42,12 +42,12 @@ const Navbar = () => {
     } catch (error) {
       console.error("Error fetching user profile:", error);
 
-      // If token is invalid, clear it and redirect to login
+      // If token is invalid, clear it but don't redirect
       if (error.response && error.response.status === 401) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         setUser(null);
-        navigate("/auth?mode=login");
+        // No redirection to login page
       }
     }
   };

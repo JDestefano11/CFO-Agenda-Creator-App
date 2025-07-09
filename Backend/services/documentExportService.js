@@ -36,83 +36,110 @@ let userPrompt = '';
 
 switch (outputType) {
     case 'agenda':
-      systemPrompt = 'You are a professional meeting agenda creator for financial executives. Create clear, concise meeting agendas with appropriate time allocations and discussion points.';
+      systemPrompt = 'You are a professional meeting agenda creator for financial executives. Create clear, concise meeting agendas focused on topics that were NOT found in the uploaded documentation. The agenda should highlight these gaps for discussion.';
       userPrompt = `
-Create a professional meeting agenda for a ${primaryStakeholder} based on this financial document analysis:
+Create a professional meeting agenda for a ${primaryStakeholder} that focuses specifically on financial topics that are MISSING from the analyzed document.
 
 Summary: ${summary}
 
-Key Topics:
+Key Topics Found in Document:
 ${keyTopics.join('\n')}
 
 Financial Figures: ${financialFigures}
 
 Action Items: ${actionItems}
 
-Format the agenda with:
-1. Meeting title
-2. Date (use [DATE] as placeholder)
-3. Attendees (include ${primaryStakeholder} and other relevant stakeholders)
-4. Clear agenda items with time allocations
-5. Discussion points for each agenda item
-6. Any pre-meeting preparation required
-7. Follow-up actions
-`;
+The meeting should focus on addressing information gaps in the document. Structure it like this example:
+
+"Meeting Agenda
+Team Weekly Sync
+Date: [DATE]
+Time: 10:00 AM – 11:00 AM (60 minutes total)
+Location: Conference Room B / Zoom
+Meeting Lead: [PRIMARY STAKEHOLDER]
+
+1. Welcome and Introductions (5 mins)
+   - Quick round of updates
+   - New team members welcome
+2. Review of Last Week's Action Items (10 mins)
+   - Status updates
+   - Outstanding items
+3. Missing Financial Information (25 mins)
+   - [Specific missing topic 1] (5 mins)
+   - [Specific missing topic 2] (5 mins)
+   - [Specific missing topic 3] (5 mins)
+   - [Specific missing topic 4] (5 mins)
+   - [Specific missing topic 5] (5 mins)
+4. Next Steps (15 mins)
+   - Assign responsibilities
+   - Set deadlines
+5. Q&A (5 mins)"
+
+Ask for meeting duration (in minutes) to properly allocate time for each section. Include 5-7 specific topics that are NOT covered in the document but should be discussed. Make it directly actionable for the ${primaryStakeholder}.`;
       break;
       
     case 'survey':
-      systemPrompt = 'You are an expert in creating financial feedback surveys for executive teams. Create targeted questions that will generate valuable insights.';
+      systemPrompt = 'You are an expert in creating financial feedback surveys for executive teams. Create targeted questions specifically about information that is MISSING from the document analysis.';
       userPrompt = `
-Create a professional feedback survey for a ${primaryStakeholder} based on this financial document analysis:
+Create a professional feedback survey for a ${primaryStakeholder} that focuses on gathering missing information NOT found in the analyzed financial document. Format this in a Google Form style.
 
-Summary: ${summary}
+Summary of What IS Known: ${summary}
 
-Key Topics:
+Key Topics Already Covered in Document:
 ${keyTopics.join('\n')}
 
-Financial Figures: ${financialFigures}
+Financial Figures Already Available: ${financialFigures}
 
-Action Items: ${actionItems}
+Action Items Already Identified: ${actionItems}
 
-Format the survey with:
-1. Introduction explaining the purpose
-2. 8-10 specific questions including:
- - Multiple choice questions
- - Rating scale questions (1-5)
- - 2-3 open-ended questions
-3. Questions should address:
- - The key financial topics identified
- - Opinions on financial figures
- - Feedback on proposed action items
- - Suggestions for improvement
-4. Conclusion with thank you note
-`;
+Create a survey that specifically asks about information gaps in the document. Format it in Google Forms style with:
+
+1. Brief introduction explaining you're gathering missing information
+2. 8-10 specific questions focusing ONLY on missing information:
+   - Multiple choice questions about missing data points
+   - Rating scale questions (1-5) about importance of missing topics
+   - 2-3 open-ended questions to capture missing context
+3. Each question should be clearly labeled as "Question 1", "Question 2", etc.
+4. For multiple choice questions, list options as:
+   □ Option A
+   □ Option B
+   □ Option C
+5. For rating scales, format as:
+   How important is [missing topic]?
+   ○ 1 - Not important
+   ○ 2 - Somewhat important
+   ○ 3 - Important
+   ○ 4 - Very important
+   ○ 5 - Critical
+
+Make sure all questions focus exclusively on information that is NOT present in the document analysis but would be valuable for a complete financial assessment.`;
       break;
       
     case 'email':
-      systemPrompt = 'You are a skilled financial communication specialist who drafts professional emails for executives. Create clear, concise, and action-oriented emails.';
+      systemPrompt = 'You are a skilled financial communication specialist who drafts professional emails for executives. Create emails specifically requesting missing information that was not found in the documentation.';
       userPrompt = `
-Create a professional email draft for a ${primaryStakeholder} based on this financial document analysis:
+Create a professional email draft for a ${primaryStakeholder} that specifically requests missing information NOT found in the analyzed financial document.
 
-Summary: ${summary}
+Summary of What IS Known: ${summary}
 
-Key Topics:
+Key Topics Already Covered in Document:
 ${keyTopics.join('\n')}
 
-Financial Figures: ${financialFigures}
+Financial Figures Already Available: ${financialFigures}
 
-Action Items: ${actionItems}
+Action Items Already Identified: ${actionItems}
 
-Format the email with:
-1. Appropriate subject line (prefixed with "Subject: ")
-2. Professional greeting
-3. Brief introduction explaining the purpose
-4. Concise summary of key findings
-5. Bullet points for the most important financial data
-6. Clear next steps or recommendations
-7. Request for feedback or meeting if appropriate
-8. Professional closing
-`;
+The email should:
+1. Have an appropriate subject line (prefixed with "Subject: ") focusing on requesting missing financial information
+2. Include a professional greeting
+3. Briefly acknowledge the information already provided
+4. Clearly list 5-7 specific pieces of missing information that are needed (formatted as bullet points)
+5. Explain why this missing information is important for complete financial assessment
+6. Request a timeline for when this missing information can be provided
+7. Suggest a follow-up meeting if appropriate
+8. End with a professional closing
+
+Make the email concise, direct, and focused exclusively on obtaining the missing information not present in the document.`;
       break;
       
     case 'other':
