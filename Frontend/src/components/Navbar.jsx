@@ -90,13 +90,13 @@ const Navbar = () => {
           {!user ? (
             <>
               <Link
-                to="/auth?mode=login"
+                to="/login"
                 className="px-5 py-2 border border-white/70 text-white font-medium rounded-lg bg-gradient-to-r from-transparent to-transparent hover:from-indigo-700 hover:to-purple-700 hover:border-indigo-400 transition-all duration-500 shadow-sm"
               >
                 Login
               </Link>
               <Link
-                to="/auth?mode=signup"
+                to="/signup"
                 className="px-5 py-2 bg-white text-indigo-700 font-medium rounded-lg relative overflow-hidden shadow-md group"
               >
                 <span className="absolute inset-0 w-0 bg-gradient-to-r from-indigo-50 to-purple-100 transition-all duration-500 ease-out group-hover:w-full"></span>
