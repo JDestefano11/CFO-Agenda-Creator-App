@@ -2,7 +2,8 @@
 // Contains environment-specific variables
 
 // API URL - Change this based on your environment
-export const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+// Using Vite's environment variable format (import.meta.env)
+export const API_URL = import.meta.env.VITE_API_URL || 'https://cfo-agenda-creator.herokuapp.com' || 'http://localhost:5000';
 
 // Other configuration variables
 export const DEFAULT_PAGINATION_LIMIT = 10;
