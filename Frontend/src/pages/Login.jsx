@@ -1,13 +1,15 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { saveToken, saveUser } from "../utils/localStorage";
+import { API_URL } from "../config";
 
 // Backend URL
-axios.defaults.baseURL = "https://cfo-agenda-creator-21d886a774e1.herokuapp.com/";
+axios.defaults.baseURL = API_URL;
 
 
 const Login = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -47,7 +49,7 @@ const Login = () => {
 
       // Redirect to upload page after 1 second
       setTimeout(() => {
-        window.location.href = "/upload";
+        navigate('/upload');
       }, 1000);
     } catch (error) {
       setLoading(false);

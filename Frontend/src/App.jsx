@@ -108,12 +108,18 @@ const App = () => {
 
         <Route
           path="/export"
-          element={<Export />}
+          element={<>
+            <Navbar />
+            <Export />
+          </>}
         />
 
         <Route 
         path="/profile"
-        element={<Profile />}
+        element={<>
+            <Navbar />
+            <Profile />
+          </>}
         />
   
         <Route path="*" element={<Navigate to="/" />} />
