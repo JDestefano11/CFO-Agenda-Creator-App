@@ -1,6 +1,7 @@
 import React from 'react';
 import { formatContentAsBullets } from '../../utils/topicUtils';
 import { useResults } from '../../context/ResultsContext';
+import TopicEditor from './TopicEditor';
 
 /**
  * TopicList component renders a list of topics with approval/rejection badges and action buttons.
@@ -15,7 +16,8 @@ const TopicList = () => {
     handleTopicSelect,
     handleApprove,
     handleReject,
-    handleEdit
+    handleEdit,
+    editingTopic
   } = useResults();
   
   // Get topics data from context
@@ -27,7 +29,18 @@ const TopicList = () => {
         const isApproved = approvedTopics.includes(topic.id);
         const isRejected = rejectedTopics.includes(topic.id);
         const isSelected = selectedTopic === topic.id;
+        const isEditing = editingTopic && editingTopic.id === topic.id;
 
+        // If this topic is being edited, show the editor instead of the regular card
+        if (isEditing) {
+          return (
+            <div key={topic.id} className="w-full">
+              <TopicEditor />
+            </div>
+          );
+        }
+        
+        // Otherwise show the normal topic card
         return (
           <div
             key={topic.id}

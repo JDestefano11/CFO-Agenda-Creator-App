@@ -110,13 +110,6 @@ const ResultsContent = () => {
     
     return (
       <div className="h-full p-4 overflow-y-auto">
-        {/* Show TopicEditor if a topic is being edited */}
-        {editingTopic ? (
-          <div className="mb-6 animate-fadeIn">
-            <TopicEditor />
-          </div>
-        ) : null}
-        
         {topicsData.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-500">No topics available</p>
