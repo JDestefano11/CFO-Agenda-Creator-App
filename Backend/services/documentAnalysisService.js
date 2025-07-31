@@ -234,168 +234,33 @@ export const analyzeDocumentContent = async (text) => {
   try {
     const truncatedText = text.length > 8000 ? text.substring(0, 8000) + '...' : text;
     
-    // Hard-coded list of 13 financial control topics and their questions
-    const hardcodedTopics = [
-      {
-        topic: "Understanding Financial KPIs and Business Priorities",
-        questions: [
-          "What are the primary financial KPIs tracked by management and reported to the Board or investors?",
-          "Which financial measure best reflects business performance from your perspective — revenue, profit, cash flow, or assets?",
-          "Which KPI, if misstated, would have the biggest impact on investor confidence or internal decision-making?",
-          "Are there any non-GAAP or adjusted performance measures we use frequently in external communications?"
-        ]
-      },
-      {
-        topic: "Seasonality and Timing",
-        questions: [
-          "Does the business have significant seasonality? If so, which quarters are the most critical financially?",
-          "Are certain business lines or products only relevant during specific parts of the year?"
-        ]
-      },
-      {
-        topic: "Volatility and One-Off Items",
-        questions: [
-          "Do we regularly have large one-off transactions or adjustments (e.g., impairments, restructuring, M&A)?",
-          "If yes, how are these treated in internal and external reporting?",
-          "How stable are earnings or margins year over year? Would using a 3-year average make sense as a benchmark?"
-        ]
-      },
-      {
-        topic: "Qualitative Factors and Known Issues",
-        questions: [
-          "Have there been past material misstatements, restatements, or auditor concerns?",
-          "Are there business units, geographies, or systems with a history of control weaknesses or fraud risk?",
-          "Do we operate in highly regulated or sensitive industries (e.g., banking, pharma, energy)?",
-          "Are there legal, compliance, or reputational risks that could make certain smaller errors significant?"
-        ]
-      },
-      {
-        topic: "Materiality Threshold Calibration",
-        questions: [
-          "What was the audit materiality used by the external auditors last year? Do you agree with their approach?",
-          "Would you prefer to set different thresholds for entity-level controls vs. process-level controls, or financial reporting vs. operational/IT controls?",
-          "What level of control failure do you consider tolerable before requiring remediation?"
-        ]
-      },
-      {
-        topic: "Business Structure & Entity Significance",
-        questions: [
-          "What are the major legal entities or reporting units in the group structure?",
-          "Which entities or locations contribute most significantly to revenue, total assets, and net income?",
-          "Which parts of the business are most significant or complex?",
-          "Are any entities immaterial from a financial standpoint but high-risk?",
-          "Are there recent acquisitions, divestitures, or reorganizations we need to consider in this year's scope?"
-        ]
-      },
-      {
-        topic: "Financial Statement Account Significance",
-        questions: [
-          "Which financial statement line items are most material to the business?",
-          "Are there any complex or judgmental accounts that require special attention?",
-          "Which accounts have the highest transaction volume or greatest exposure to error or fraud?"
-        ]
-      },
-      {
-        topic: "Process and Risk Mapping",
-        questions: [
-          "Which processes have the highest impact on financial reporting?",
-          "Are there centralized processes that serve multiple entities?",
-          "Are there manual processes or spreadsheets used in financial reporting that are not system-based?"
-        ]
-      },
-      {
-        topic: "Systems & IT Considerations",
-        questions: [
-          "Which ERP or financial systems are used across entities? Are any systems outdated or unsupported?",
-          "Are there interfaces or data transfers between systems that are not fully automated?",
-          "Is access to financial systems tightly controlled across all key locations and user groups?"
-        ]
-      },
-      {
-        topic: "Risk Indicators and Qualitative Factors",
-        questions: [
-          "Have any internal audits or external audits flagged recurring control issues in certain areas or locations?",
-          "Are there known control weaknesses or late remediations from the previous year?",
-          "Are there any locations or teams with high staff turnover, poor segregation of duties, or high fraud risk?"
-        ]
-      },
-      {
-        topic: "Changes and Emerging Risks",
-        questions: [
-          "Have there been significant changes in processes, systems, or organizational responsibilities in the last 12 months?",
-          "Are there upcoming changes that could affect control design or testing?"
-        ]
-      },
-      {
-        topic: "CFO Decisions and Preferences",
-        questions: [
-          "Would you prefer to take a risk-based approach or cover more broadly across the group?",
-          "What level of involvement do you want in approving final scoping decisions?"
-        ]
-      },
-      {
-        topic: "Follow-Up Data Requests to Support Scoping",
-        questions: [
-          "Most recent audited financial statements",
-          "KPI dashboards or board reporting packs",
-          "External auditor planning materiality memo (if available)",
-          "Org structure and business unit revenue/profit splits",
-          "Process ownership matrix (if available)"
-        ]
-      }
-    ];
-    
     const prompt = `
-You are a financial controls expert analyzing a document for a CFO. Analyze the document and answer the specific questions for each of the 13 predefined topics provided below.
+You are a financial controls expert analyzing a document for a CFO. Extract the 5 most important topics from the document and provide detailed information about each topic.
 
 Document content:
 ${truncatedText}
 
-For each topic, provide a detailed, insightful response based on the document content. If information for a particular topic is not found in the document, state clearly that the document does not contain information on this topic.
-
 Output Format:
-Provide answers in the following structured format:
+You MUST provide EXACTLY 5 topics in the following structured format with no deviations:
 
-TOPIC 1: Understanding Financial KPIs and Business Priorities
-DESCRIPTION: [Provide a detailed answer addressing the KPI questions based on the document]
+TOPIC 1: [Brief title of the first key topic]
+DESCRIPTION: [2-3 sentences with detailed information about this topic from the document]
 
-TOPIC 2: Seasonality and Timing
-DESCRIPTION: [Provide a detailed answer addressing the seasonality questions based on the document]
+TOPIC 2: [Brief title of the second key topic]
+DESCRIPTION: [2-3 sentences with detailed information about this topic from the document]
 
-TOPIC 3: Volatility and One-Off Items
-DESCRIPTION: [Provide a detailed answer addressing the volatility questions based on the document]
+TOPIC 3: [Brief title of the third key topic]
+DESCRIPTION: [2-3 sentences with detailed information about this topic from the document]
 
-TOPIC 4: Qualitative Factors and Known Issues
-DESCRIPTION: [Provide a detailed answer addressing the qualitative factors questions based on the document]
+TOPIC 4: [Brief title of the fourth key topic]
+DESCRIPTION: [2-3 sentences with detailed information about this topic from the document]
 
-TOPIC 5: Materiality Threshold Calibration
-DESCRIPTION: [Provide a detailed answer addressing the materiality threshold questions based on the document]
+TOPIC 5: [Brief title of the fifth key topic]
+DESCRIPTION: [2-3 sentences with detailed information about this topic from the document]
 
-TOPIC 6: Business Structure & Entity Significance
-DESCRIPTION: [Provide a detailed answer addressing the business structure questions based on the document]
+Ensure each topic title is concise (3-7 words) and each description provides specific, actionable information from the document. Focus on financial insights, strategic considerations, and key data points that would be valuable for a CFO's agenda.
 
-TOPIC 7: Financial Statement Account Significance
-DESCRIPTION: [Provide a detailed answer addressing the financial statement questions based on the document]
-
-TOPIC 8: Process and Risk Mapping
-DESCRIPTION: [Provide a detailed answer addressing the process and risk mapping questions based on the document]
-
-TOPIC 9: Systems & IT Considerations
-DESCRIPTION: [Provide a detailed answer addressing the systems questions based on the document]
-
-TOPIC 10: Risk Indicators and Qualitative Factors
-DESCRIPTION: [Provide a detailed answer addressing the risk indicators questions based on the document]
-
-TOPIC 11: Changes and Emerging Risks
-DESCRIPTION: [Provide a detailed answer addressing the changes and emerging risks questions based on the document]
-
-TOPIC 12: CFO Decisions and Preferences
-DESCRIPTION: [Provide a detailed answer addressing the CFO decisions questions based on the document]
-
-TOPIC 13: Follow-Up Data Requests to Support Scoping
-DESCRIPTION: [Provide a detailed answer addressing the data requests based on the document]
-
-IMPORTANT: You MUST address ALL 13 topics. For any topic not covered in the document, clearly state: "The document does not provide sufficient information on [topic name]." but still include that topic in your response.
+IMPORTANT: You MUST provide exactly 5 topics with detailed descriptions. Do not skip any topics or descriptions.
 `;
     
     const response = await openai.chat.completions.create({
@@ -403,7 +268,7 @@ IMPORTANT: You MUST address ALL 13 topics. For any topic not covered in the docu
       messages: [
         {
           role: "system",
-          content: "You are a financial document analysis assistant specializing in financial controls and CFO agenda preparation. Analyze documents to provide detailed answers to specific questions across 13 predefined financial topics. Always include all 13 topics in your response, even if information is not available for some topics."
+          content: "You are a financial document analysis assistant. Extract key information from financial documents in a clear, structured format. Always provide EXACTLY 5 key topics with a title and detailed description for each. Format each topic as 'TOPIC X: [Title]' followed by 'DESCRIPTION: [2-3 sentence description]'."
         },
         {
           role: "user",
@@ -411,7 +276,7 @@ IMPORTANT: You MUST address ALL 13 topics. For any topic not covered in the docu
         }
       ],
       temperature: 0.3,
-      max_tokens: 3000
+      max_tokens: 1500
     });
     
     return {
@@ -430,165 +295,167 @@ IMPORTANT: You MUST address ALL 13 topics. For any topic not covered in the docu
 // Process document with real content extraction for all document types
 export const processDocument = async (document) => {
   try {
-    // Step 1: Extract file info from the document
-    const { fileId, fileName, fileType, userId } = document;
-    console.log(`Processing document: ${fileName} (${fileType}) for user: ${userId}`);
+    console.log(`Processing document: ${document.fileName}, type: ${document.fileType}`);
     
-    // Step 2: Retrieve file buffer from GridFS
-    const db = global.mongoClient.db();
-    const bucket = new mongodb.GridFSBucket(db);
+    // Check if document has fileContent
+    if (!document.fileContent || document.fileContent.length === 0) {
+      console.error('Document has no file content');
+      return {
+        success: false,
+        message: 'Document has no file content'
+      };
+    }
     
-    let fileBuffer;
+    console.log(`Document has file content of size: ${document.fileContent.length} bytes`);
+    
+    // Extract text from the document using the appropriate method for its file type
+    console.log('Extracting text from document...');
+    let extractedText;
+    
     try {
-      // Get the file data as a buffer
-      const downloadStream = bucket.openDownloadStream(new mongodb.ObjectId(fileId));
-      fileBuffer = await streamToBuffer(downloadStream);
-      console.log(`Successfully retrieved file buffer of size: ${fileBuffer.length} bytes`);
-    } catch (error) {
-      console.error(`Error retrieving file from GridFS: ${error.message}`);
-      throw new Error(`Could not retrieve file: ${error.message}`);
+      // Use the appropriate extraction method based on file type
+      if (document.fileType === 'application/pdf') {
+        extractedText = await extractTextFromPDF(document.fileContent);
+      } else if (document.fileType === 'application/msword' || document.fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        extractedText = await extractTextFromWord(document.fileContent);
+      } else if (document.fileType === 'application/vnd.ms-excel' || document.fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+        extractedText = await extractTextFromExcel(document.fileContent);
+      } else if (document.fileType === 'text/plain' || document.fileType === 'text/csv') {
+        extractedText = document.fileContent.toString('utf8');
+      } else {
+        return {
+          success: false,
+          message: `Unsupported file type: ${document.fileType}`
+        };
+      }
+      
+      console.log(`Text extracted successfully, length: ${extractedText.length} characters`);
+      
+      // If we got very little text, the document might be empty or have extraction issues
+      if (extractedText.length < 50) {
+        return {
+          success: false,
+          message: 'The document appears to be empty or contains too little text to analyze'
+        };
+      }
+    } catch (extractError) {
+      console.error('Error extracting text:', extractError);
+      return {
+        success: false,
+        message: `Failed to extract text from document: ${extractError.message}`
+      };
     }
     
-    // Step 3: Extract text based on file type
-    console.log(`Extracting text from ${fileType} document...`);
-    const extractedText = await extractTextFromDocument(fileBuffer, fileType);
-    
-    if (!extractedText || extractedText.length < 50) {
-      console.error(`Insufficient text extracted from document. Length: ${extractedText ? extractedText.length : 0}`);
-      throw new Error('Could not extract sufficient text from the document');
-    }
-    
-    console.log(`Successfully extracted ${extractedText.length} characters from document`);
-    
-    // Step 4: Analyze the extracted text with OpenAI
-    console.log('Analyzing document content with OpenAI...');
+    // Send the extracted text to OpenAI for analysis
+    console.log('Sending content to OpenAI for analysis...');
     const analysisResult = await analyzeDocumentContent(extractedText);
     
     if (!analysisResult.success) {
-      console.error(`OpenAI analysis failed: ${analysisResult.message}`);
-      throw new Error(`OpenAI analysis failed: ${analysisResult.message}`);
+      return {
+        success: false,
+        message: analysisResult.message || 'Failed to analyze document content'
+      };
     }
     
-    console.log('Successfully analyzed document content with OpenAI');
+    console.log(`Analysis complete, success: ${analysisResult.success}`);
     
-    // Step 5: Parse the analysis result
+    // Extract topics from the analysis
     const analysisText = analysisResult.analysis;
-    
-    // Define the 13 expected topics
-    const expectedTopics = [
-      "Understanding Financial KPIs and Business Priorities",
-      "Seasonality and Timing",
-      "Volatility and One-Off Items",
-      "Qualitative Factors and Known Issues",
-      "Materiality Threshold Calibration",
-      "Business Structure & Entity Significance",
-      "Financial Statement Account Significance",
-      "Process and Risk Mapping",
-      "Systems & IT Considerations",
-      "Risk Indicators and Qualitative Factors",
-      "Changes and Emerging Risks",
-      "CFO Decisions and Preferences",
-      "Follow-Up Data Requests to Support Scoping"
-    ];
-    
-    // Extract key topics from the analysis
     let keyTopics = [];
-    let topicTitles = [];
-    let topicDescriptions = [];
-    let structuredTopics = [];
-    let topicDetailsMap = {};
-    let missingTopics = [];
     
     try {
-      console.log('Extracting topics from analysis...');
+      console.log('Attempting to extract structured topics from OpenAI response');
       
-      // Try to extract structured topics from the output
-      const topicRegex = /TOPIC\s+(\d+)\s*:\s*([^\n]+)[\s\S]*?DESCRIPTION\s*:\s*([^\n]+(?:\n(?!TOPIC\s+\d+)[^\n]+)*)/g;
+      // Parse the structured format from OpenAI
+      // Looking for patterns like "TOPIC 1: Title" followed by "DESCRIPTION: Details"
+      const topicPattern = /TOPIC\s*(\d+)\s*:\s*([^\n]+)\s*\n+\s*DESCRIPTION\s*:\s*([^\n]+(?:\n+[^\n]+)*?)(?=\n+TOPIC|$)/gi;
+      
+      // Store both topic titles and descriptions
+      const structuredTopics = [];
+      const topicTitles = [];
+      const topicDescriptions = [];
+      const topicDetailsMap = {};
       
       let match;
-      while ((match = topicRegex.exec(analysisText)) !== null) {
-        const topicNumber = parseInt(match[1]);
-        
-        // We only want topics 1-13 (our hardcoded topics)
-        if (topicNumber < 1 || topicNumber > 13) {
-          continue;
-        }
-        
-        // Use the expected topic title from our hardcoded list instead of what OpenAI returned
-        // This ensures consistency in topic names
-        const topicTitle = expectedTopics[topicNumber - 1]; // Convert to 0-based index
+      while ((match = topicPattern.exec(analysisText)) !== null) {
+        const topicNumber = parseInt(match[1]) - 1; // Convert to 0-based index
+        const topicTitle = match[2].trim();
         const topicDescription = match[3].trim();
         
-        console.log(`Found topic ${topicNumber}: ${topicTitle}`);
+        console.log(`Found Topic ${topicNumber + 1}: ${topicTitle}`);
+        console.log(`Description: ${topicDescription}`);
         
         structuredTopics.push({
-          number: topicNumber,
           title: topicTitle,
           description: topicDescription
         });
         
         topicTitles.push(topicTitle);
         topicDescriptions.push(topicDescription);
+        
+        // Store in the map using the index as the key
         topicDetailsMap[topicNumber] = topicDescription;
       }
       
+      // Log the topic details map
       console.log('Topic details map:', topicDetailsMap);
-      console.log(`Found ${structuredTopics.length} structured topics out of 13 expected`);
       
-      // Always use the expected topics list for keyTopics
-      keyTopics = expectedTopics;
+      console.log(`Found ${structuredTopics.length} structured topics`);
       
-      // Store the descriptions for later use
-      global.topicDescriptions = topicDescriptions;
-      global.structuredTopics = structuredTopics;
-      global.topicDetailsMap = topicDetailsMap;
+      // If we found structured topics, use them
+      if (structuredTopics.length > 0) {
+        keyTopics = topicTitles;
+        
+        // Store the descriptions for later use
+        global.topicDescriptions = topicDescriptions;
+        global.structuredTopics = structuredTopics;
+        global.topicDetailsMap = topicDetailsMap;
+      } else {
+        // Fallback: Try to find topics by looking for numbered sections
+        console.log('No structured topics found, trying alternative parsing');
+        
+        const topicRegex = /\d+\s*[.:]\s*([^\n]+)/g;
+        let fallbackMatch;
+        while ((fallbackMatch = topicRegex.exec(analysisText)) !== null) {
+          if (fallbackMatch[1] && fallbackMatch[1].trim().length > 0) {
+            keyTopics.push(fallbackMatch[1].trim());
+          }
+        }
+        
+        // If we still don't have enough topics, use generic ones
+        if (keyTopics.length < 5) {
+          console.log(`Only found ${keyTopics.length} topics, adding generic topics`);
+          
+          // Add generic topics if needed
+          const genericTopics = [
+            'Financial Performance Analysis',
+            'Budget Planning and Forecasting',
+            'Risk Management Strategy',
+            'Cost Optimization Opportunities',
+            'Investment Priorities'
+          ];
+          
+          for (let i = keyTopics.length; i < 5; i++) {
+            keyTopics.push(genericTopics[i - keyTopics.length]);
+          }
+        }
+      }
       
-      // Check which of our expected topics are missing
-      missingTopics = expectedTopics.filter(expectedTopic => 
-        !structuredTopics.some(topic => 
-          topic.title === expectedTopic || 
-          topic.title.toLowerCase().includes(expectedTopic.toLowerCase()) || 
-          expectedTopic.toLowerCase().includes(topic.title.toLowerCase())
-        )
-      );
+      // Ensure we have exactly 5 topics
+      keyTopics = keyTopics.slice(0, 5);
       
-      console.log('Missing topics:', missingTopics);
+      console.log('Final extracted topics:', keyTopics);
     } catch (parseError) {
       console.error('Error parsing topics from analysis:', parseError);
-      // If parsing fails, all topics are considered missing
-      missingTopics = expectedTopics;
+      // Fallback to generic topics if parsing fails
+      keyTopics = [
+        'Financial Performance Analysis',
+        'Budget Planning and Forecasting',
+        'Risk Management Strategy',
+        'Cost Optimization Opportunities',
+        'Investment Priorities'
+      ];
     }
-    
-    // Ensure we have all 13 topics by filling in missing ones
-    for (let i = 0; i < expectedTopics.length; i++) {
-      const topicNum = i + 1;
-      
-      // If this topic isn't in our extracted topics, add it with a default description
-      if (!topicDetailsMap[topicNum]) {
-        const missingTopic = expectedTopics[i];
-        const missingDescription = `The document does not provide sufficient information on ${missingTopic}.`;
-        
-        // Add to the structured topics
-        structuredTopics.push({
-          number: topicNum,
-          title: missingTopic,
-          description: missingDescription
-        });
-        
-        // Also add to the map
-        topicDetailsMap[topicNum] = missingDescription;
-      }
-    }
-    
-    // Sort the structured topics by their number
-    structuredTopics.sort((a, b) => a.number - b.number);
-    
-    // Update global variables with the complete list
-    global.structuredTopics = structuredTopics;
-    global.topicDetailsMap = topicDetailsMap;
-    global.missingTopics = missingTopics;
-    
-    console.log('Final structured topics:', structuredTopics.map(t => t.title));
     
     // Extract a summary from the analysis
     let summary = 'Document analysis summary not available';
@@ -614,12 +481,11 @@ export const processDocument = async (document) => {
     return {
       success: true,
       summary: summary,
-      keyTopics: expectedTopics, // Always use the expected topics list
+      keyTopics: keyTopics,
       topicDetails: topicDetailsMap || {}, // Use the map we created during extraction
       financialFigures: 'Financial figures extracted from document',
       actionItems: 'Action items identified from document content',
-      rawAnalysis: analysisText,
-      missingTopics: missingTopics // Include the list of missing topics
+      rawAnalysis: analysisText
     };
   } catch (error) {
     console.error('Error processing document:', error);
