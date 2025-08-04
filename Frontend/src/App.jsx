@@ -86,18 +86,40 @@ const App = () => {
             </>
           }
         />
-        <Route path="/login" element={<Navigate to="/" />} />
-        <Route path="/signup" element={<Navigate to="/" />} />
+        <Route
+          path="/login"
+          element={
+            <>
+              <Navbar />
+              <Login />
+            </>
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <>
+              <Navbar />
+              <Signup />
+            </>
+          }
+        />
         
 
         <Route
           path="/export"
-          element={<Export />}
+          element={<>
+            <Navbar />
+            <Export />
+          </>}
         />
 
         <Route 
         path="/profile"
-        element={<Profile />}
+        element={<>
+            <Navbar />
+            <Profile />
+          </>}
         />
   
         <Route path="*" element={<Navigate to="/" />} />

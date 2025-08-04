@@ -21,13 +21,27 @@ connectDB().then(() => {
   const app = express();
 
 // CORS middleware - configure for production and development
-// Use a simpler CORS configuration that allows all origins for now
+// Enhanced CORS configuration to properly handle preflight requests
 app.use(cors({
   origin: '*', // Allow all origins
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Authorization', 'authorization'],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
+
+// Log all incoming requests for debugging
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  console.log('Headers:', JSON.stringify(req.headers));
+  next();
+});
+
+// Handle preflight requests explicitly
+app.options('*', cors());
+
 // Other middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

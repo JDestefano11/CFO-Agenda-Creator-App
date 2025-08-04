@@ -14,7 +14,8 @@ import SignupSidebar from "../components/signup/SignupSidebar";
 import FormNavigation from "../components/signup/FormNavigation";
 
 // Configure axios with base URL
-axios.defaults.baseURL = "https://cfo-agenda-creator-21d886a774e1.herokuapp.com/";
+import { API_URL } from '../config';
+axios.defaults.baseURL = API_URL;
 
 
 const Signup = () => {
@@ -207,7 +208,7 @@ const Signup = () => {
           error.message === "Network Error"
         ) {
           setError(
-            "Cannot connect to the server. Please make sure the backend server is running at https://cfo-agenda-creator-21d886a774e1.herokuapp.com/"
+            `Cannot connect to the server. Please make sure the backend server is running at ${API_URL}`
           );
         } else {
           setError("An unexpected error occurred. Please try again later.");

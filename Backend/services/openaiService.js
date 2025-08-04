@@ -76,7 +76,7 @@ export const generateText = async (prompt) => {
         }
       ],
       temperature: 0.7,
-      max_tokens: 500
+      max_tokens: 3000
     });
     
     return response.choices[0].message.content;

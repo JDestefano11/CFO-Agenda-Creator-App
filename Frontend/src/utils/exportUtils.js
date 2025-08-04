@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Direct Heroku URL
-const HEROKU_URL = 'https://cfo-agenda-creator-21d886a774e1.herokuapp.com';
+// Import API URL from config
+import { API_URL } from '../config';
 
 /**
  * Generate export content for a document
@@ -20,7 +20,7 @@ export const generateExportContent = async (documentId, options) => {
     }
 
     const response = await axios.post(
-      `https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/export/${documentId}/generate`,
+      `${API_URL}/api/export/${documentId}/generate`,
       {
         outputType: options.outputType,
         primaryStakeholder: options.primaryStakeholder,
