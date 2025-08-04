@@ -3,19 +3,20 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Check if OpenAI API key is configured
-if (!process.env.OPENAI_API_KEY) {
-  console.error('OPENAI_API_KEY is not defined in environment variables');
-  console.error('Please add your OpenAI API key to the .env file');
+// Check if OpenAI API key is configured in either format
+const openaiKey = process.env.OPENAI_API_KEY || process.env.OPEN_API_KEY;
+if (!openaiKey) {
+  console.error('Neither OPENAI_API_KEY nor OPEN_API_KEY is defined in environment variables');
+  console.error('Please add your OpenAI API key to the .env file or Heroku config vars');
 }
 
 // Initialize OpenAI client
 let openai;
 try {
   openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
+    apiKey: openaiKey // Use whichever key format is available
   });
-  console.log('OpenAI service initialized with API key:', process.env.OPENAI_API_KEY ? 'Key is present' : 'Key is missing');
+  console.log('OpenAI service initialized with API key:', openaiKey ? 'Key is present' : 'Key is missing');
 } catch (error) {
   console.error('Error initializing OpenAI client:', error.message);
 }
