@@ -80,8 +80,6 @@ export const extractDocumentId = (response) => {
   return null;
 };
 
-// Direct Heroku endpoint URL
-const HEROKU_URL = 'https://cfo-agenda-creator-21d886a774e1.herokuapp.com';
 const TIMEOUT = 30000; // 30 second timeout
 
 /**
@@ -109,8 +107,8 @@ export const uploadDocument = async (file, authToken) => {
       console.log('FormData entry:', key, value instanceof File ? `[File: ${value.name}, Type: ${value.type}]` : value);
     }
     
-    // Use the exact URL that works in Postman
-    const url = "https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/documents/upload";
+    // Use the configured API URL
+    const url = `${API_URL}/api/documents/upload`;
     console.log('Upload URL:', url);
     
     const config = {
@@ -170,8 +168,8 @@ export const analyzeDocument = async (documentId, authToken) => {
     console.log('Auth token present:', !!authToken);
     console.log('Auth token first 10 chars:', authToken ? authToken.substring(0, 10) + '...' : 'none');
     
-    // Use the exact URL format that works in Postman
-    const url = `https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/documents/${documentId}/analyze`;
+    // Use the configured API URL
+    const url = `${API_URL}/api/documents/${documentId}/analyze`;
     console.log('Analyze URL:', url);
     
     const config = {

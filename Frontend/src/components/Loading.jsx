@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiLoader } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 const Loading = ({ duration = 15, onComplete }) => {
   const [progress, setProgress] = useState(0);
@@ -31,7 +32,7 @@ const Loading = ({ duration = 15, onComplete }) => {
         }
 
         // Use the correct API endpoint for document analysis
-        const response = await axios.post(`https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/documents/${documentId}/analyze`,  {}, {
+        const response = await axios.post(`${API_URL}/api/documents/${documentId}/analyze`,  {}, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Content-Type': 'application/json'

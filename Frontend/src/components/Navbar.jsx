@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_URL } from '../config';
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
@@ -26,7 +27,7 @@ const Navbar = () => {
   const fetchUserProfile = async (token) => {
     try {
       const response = await axios.get(
-        "https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/users/profile",
+        `${API_URL}/api/users/profile`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

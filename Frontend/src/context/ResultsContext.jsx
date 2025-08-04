@@ -4,6 +4,7 @@ import axios from 'axios';
 import { formatContentAsBullets } from '../utils/topicUtils';
 import { saveEditedTopic, getEditedTopicsForDocument } from '../utils/topicStorage';
 import { extractTopicsData, areAllTopicsReviewed as checkAllTopicsReviewed } from '../utils/topicUtils';
+import { API_URL } from '../config';
 
 // Create the context
 const ResultsContext = createContext();
@@ -73,7 +74,7 @@ export const ResultsProvider = ({ children }) => {
       }
   
       try {
-        const { data } = await axios.get(`https://cfo-agenda-creator-21d886a774e1.herokuapp.com/api/documents/${documentId}/analysis`, { 
+        const { data } = await axios.get(`${API_URL}/api/documents/${documentId}/analysis`, { 
           headers: { Authorization: `Bearer ${token}` },
         });
   
